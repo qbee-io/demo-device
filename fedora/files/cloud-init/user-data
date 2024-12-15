@@ -1,0 +1,36 @@
+#cloud-config
+users:
+  - name: qbee
+    lock_passwd: false
+    passwd: $6$78uuAvm6rdNn$o73KyO/rstnObj9m/WRW0nRSwp1vO7.Da/OdmtOz5niJjhf/LAe7ksvr3UVReBr/tDdEwQGu46gCMHWXkyO98/
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+
+write_files:
+  - path: /etc/issue
+    content: |
+      Debian GNU/Linux 12 \n \l
+
+      ***************************
+      *
+      * Qbee demo system:       
+      *                         
+      * Username: qbee          
+      * Password: qbee      
+      *
+      ***************************
+
+ssh_pwauth: True
+bootcmd:
+  - |
+    if [ ! -f /etc/qbee/qbee-agent.json ]; then
+      if [ -c /dev/tpm0 ]; then
+        qbee-agent bootstrap -k $QBEE_DEMO_BOOTSTRAP_KEY \
+          --device-hub-host $QBEE_DEMO_DEVICE_HUB_HOST \
+          --tpm-device /dev/tpm0 2>&1 > /dev/null
+      else
+        qbee-agent bootstrap -k $QBEE_DEMO_BOOTSTRAP_KEY \
+          --device-hub-host $QBEE_DEMO_DEVICE_HUB_HOST 2>&1 > /dev/null
+      fi
+    fi
+

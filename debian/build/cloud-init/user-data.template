@@ -1,0 +1,36 @@
+#cloud-config
+bootcmd:
+  - DEBIAN_FRONTEND=noninteractive apt-get -yq update
+  - DEBIAN_FRONTEND=noninteractive apt-get -yq install gnupg
+
+apt:
+  sources:
+    docker.list:
+      source: deb [arch=amd64] https://download.docker.com/linux/debian bookworm stable
+      keyid: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+
+package_update: true
+packages:
+  - docker-ce
+  - docker-ce-cli
+  - podman
+
+runcmd:
+  - |
+    wget -O /tmp/qbee-agent-installer.sh -q https://raw.githubusercontent.com/qbee-io/qbee-agent-installers/main/qbee-agent-installer.sh
+
+    bash -x /tmp/qbee-agent-installer.sh $QBEE_INSTALLER_ARGS
+
+    # Disable unattended upgrades
+    systemctl --quiet is-active unattended-upgrades && sudo systemctl stop unattended-upgrades
+    systemctl --quiet is-active apt-daily && sudo systemctl stop apt-daily
+    systemctl --quiet is-active apt-daily-upgrade && sudo systemctl stop apt-daily-upgrade
+
+    systemctl disable unattended-upgrades apt-daily-upgrade.timer apt-daily.timer
+    systemctl mask apt-daily apt-daily-upgrade unattended-upgrades apt-daily-upgrade.timer apt-daily.timer
+    rm -f /etc/cron.daily/apt-compat
+
+    apt-get clean
+    apt-get autoremove -y
+
+    shutdown -h now
