@@ -14,7 +14,9 @@ install_image() {
   BASEIMAGE="debian-12-genericcloud-$ARCH.qcow2"
 
   if [[ ! -f "$BASEDIR/$BASEIMAGE" ]]; then
-    wget "https://cloud.debian.org/images/cloud/bookworm/latest/$BASEIMAGE"
+    wget --quiet \
+      --output-file="$BASEDIR/$BASEIMAGE" \
+      "https://cloud.debian.org/images/cloud/bookworm/latest/$BASEIMAGE"
   fi
 
   cp "$BASEDIR/$BASEIMAGE" "$BASEDIR/build/vmimage.$ARCH.qcow2"
