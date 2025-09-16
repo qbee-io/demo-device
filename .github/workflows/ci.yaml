@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  setup-amd64:
+  build-amd64:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -18,7 +18,7 @@ jobs:
           platforms: 'linux/amd64'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-x86 gettext-base cpu-checker
+        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-x86 gettext-base
 
       - name: Change permissions of /dev/kvm
         run: sudo chmod 666 /dev/kvm
