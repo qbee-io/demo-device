@@ -40,7 +40,8 @@ if [[ "$BUILD_ARCH" == "arm64" ]]; then
     -netdev user,id=net0,hostfwd=tcp::2222-:22 \
     $QEMU_OPTIONS
 elif [[ "$BUILD_ARCH" == "amd64" ]] && [[ -c /dev/kvm ]]; then
-  QEMU_OPTIONS="$QEMU_OPTIONS -machine type=pc,accel=kvm -smp 4 -cpu host -nographic"
+  #QEMU_OPTIONS="$QEMU_OPTIONS -machine type=pc,accel=kvm -smp 4 -cpu host -nographic"
+  QEMU_OPTIONS="$QEMU_OPTIONS -machine type=pc -smp 4 -cpu host -nographic"
   qemu-system-${QEMU_ARCH} \
   -m 1G \
     -device virtio-net-pci,netdev=net0,mac=$MAC \
