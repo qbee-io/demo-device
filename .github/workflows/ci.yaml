@@ -9,6 +9,9 @@ jobs:
   setup-amd64:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -16,8 +19,8 @@ jobs:
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-x86 gettext-base cpu-checker
-      
-      - name: Chnage permissions of /dev/kvm
+
+      - name: Change permissions of /dev/kvm
         run: sudo chmod 666 /dev/kvm
         
       - name: Run build script
