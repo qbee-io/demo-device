@@ -15,7 +15,7 @@ install_image() {
 
   if [[ ! -f "$BASEDIR/$BASEIMAGE" ]]; then
     wget --quiet \
-      --output-file="$BASEDIR/$BASEIMAGE" \
+      --output-document="$BASEDIR/$BASEIMAGE" \
       "https://cloud.debian.org/images/cloud/bookworm/latest/$BASEIMAGE"
   fi
 
