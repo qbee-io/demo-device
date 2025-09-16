@@ -18,7 +18,7 @@ jobs:
           platforms: 'linux/amd64'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-x86 envsubst
+        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-x86 gettext-base
 
       - name: Run build script
         run: bash debian/docker-build.sh amd64
@@ -34,7 +34,7 @@ jobs:
           platforms: 'linux/arm64'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-arm envsubst
+        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-arm gettext-base
 
       - name: Run build script
         run: bash debian/docker-build.sh arm64
