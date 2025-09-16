@@ -30,8 +30,9 @@ jobs:
           ls -l /dev/kvm
           id -a
           sudo usermod -a -G kvm $USER
-          id -a 
-
+      - name: Check user groups
+        run: |
+          id -a
       # usermod -a -G kvm yourUserName
       # - name: Run build script
       #   run: bash debian/docker-build.sh amd64
