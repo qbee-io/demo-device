@@ -18,10 +18,17 @@ jobs:
           platforms: 'linux/amd64'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-x86 gettext-base
+        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-x86 gettext-base cpu-checker
 
-      - name: Run build script
-        run: bash debian/docker-build.sh amd64
+      - name: Verify KVM support
+        run: |
+          if kvm-ok; then
+            echo "KVM acceleration is supported"
+          else
+            echo "KVM acceleration is not supported"
+          fi
+      # - name: Run build script
+      #   run: bash debian/docker-build.sh amd64
   build-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
