@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-amd64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: 'linux/amd64'
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-kvm qemu-utils
+
+      - name: Run build script
+        run: bash debian/docker-build.sh amd64
+  build-arm64:
+    runs-on: ubuntu-latest-arm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: 'linux/arm64'
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-kvm qemu-utils
+
+      - name: Run build script
+        run: bash debian/docker-build.sh arm64
