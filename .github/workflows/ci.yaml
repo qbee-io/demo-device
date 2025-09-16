@@ -27,6 +27,10 @@ jobs:
           else
             echo "KVM acceleration is not supported"
           fi
+          ls -l /dev/kvm
+          id -a
+
+      # usermod -a -G kvm yourUserName
       # - name: Run build script
       #   run: bash debian/docker-build.sh amd64
   build-arm64:
