@@ -19,8 +19,8 @@ runcmd:
   - |
     wget -O /tmp/qbee-agent-installer.sh -q https://raw.githubusercontent.com/qbee-io/qbee-agent-installers/main/qbee-agent-installer.sh
 
-    bash -x /tmp/qbee-agent-installer.sh $QBEE_INSTALLER_ARGS
-
+    bash -x /tmp/qbee-agent-installer.sh
+    
     # Disable unattended upgrades
     systemctl --quiet is-active unattended-upgrades && sudo systemctl stop unattended-upgrades
     systemctl --quiet is-active apt-daily && sudo systemctl stop apt-daily

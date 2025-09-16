@@ -1,34 +1,50 @@
 #!/usr/bin/env bash
 set -e
 
-BASEDIR=$(cd $(dirname $0) && pwd)
+declare -A ARCH_MAP=( ["amd64"]="x86_64" ["arm64"]="aarch64" )
 
-IMG="$BASEDIR/vmimage.qcow2"
-MAC=$(echo $HOSTNAME | md5sum | sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
+QEMU_ARCH=${ARCH_MAP[$2]:-"x86_64"}
 
-QBEE_INSTALLER_ARGS=""
+BASEDIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [[ "$1" != "latest" ]]; then
-  QBEE_INSTALLER_ARGS="--qbee-agent-version $1"
-fi
+IMG="$BASEDIR/vmimage.$2.qcow2"
+MAC=$(echo "$HOSTNAME" | md5sum | sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
 
-export QBEE_INSTALLER_ARGS
+envsubst < "$BASEDIR/cloud-init/user-data.template" > "$BASEDIR/cloud-init/user-data"
+cloud-localds "$BASEDIR/cloud-init/seed.img" "$BASEDIR/cloud-init/user-data"
 
-envsubst < $BASEDIR/cloud-init/user-data.template > $BASEDIR/cloud-init/user-data
+QEMU_OPTIONS=""
 
-cloud-localds $BASEDIR/cloud-init/seed.img $BASEDIR/cloud-init/user-data
+if [[ "$2" == "arm64" ]]; then
+  #QEMU_OPTIONS="$QEMU_OPTIONS -machine virt,gic-version=3 -cpu cortex-a57 -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd"  
+  rm -f $BASEDIR/varstore.img
+  truncate -s 64m $BASEDIR/varstore.img
+  
+  rm -f $BASEDIR/efi.img
+  truncate -s 64m $BASEDIR/efi.img
+  dd if=/usr/share/qemu-efi-aarch64/QEMU_EFI.fd of=$BASEDIR/efi.img conv=notrunc
 
-QEMU_OPTIONS="-accel tcg"
-
-if [[ -c /dev/kvm ]]; then
-  QEMU_OPTIONS="$QEMU_OPTIONS -machine type=pc,accel=kvm -smp 4 -cpu host"
-fi
-
-qemu-system-x86_64 \
+  qemu-system-${QEMU_ARCH} \
+    -m 2G \
+    -cpu max \
+    -M virt \
+    -nographic \
+    -drive if=pflash,format=raw,file=$BASEDIR/efi.img,readonly=on \
+    -drive if=pflash,format=raw,file=$BASEDIR/varstore.img \
+    -drive if=none,file=$IMG,id=hd0 \
+    -device virtio-blk-device,drive=hd0 \
+    -drive if=none,format=raw,file=$BASEDIR/cloud-init/seed.img,id=cloud \
+    -device virtio-blk-device,drive=cloud \
+    -device virtio-net-pci,netdev=net0,mac=$MAC \
+    -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+    $QEMU_OPTIONS
+elif [[ "$ARCH" == "amd64" ]] && [[ -c /dev/kvm ]]; then
+  QEMU_OPTIONS="$QEMU_OPTIONS -machine type=pc,accel=kvm -smp 4 -cpu host -nographic"
+  qemu-system-${QEMU_ARCH} \
   -m 1G \
-  -nographic \
-  -device virtio-net-pci,netdev=net0,mac=$MAC \
-  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
-  -drive if=virtio,format=qcow2,file=$IMG \
-  -drive if=virtio,format=raw,file=$BASEDIR/cloud-init/seed.img \
-  $QEMU_OPTIONS
+    -device virtio-net-pci,netdev=net0,mac=$MAC \
+    -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+    -drive if=virtio,format=qcow2,file=$IMG \
+    -drive if=virtio,format=raw,file=$BASEDIR/cloud-init/seed.img \
+    $QEMU_OPTIONS
+fi
