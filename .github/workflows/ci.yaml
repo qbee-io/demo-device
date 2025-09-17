@@ -16,7 +16,12 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-x86 gettext-base
 
       - name: Change permissions of /dev/kvm
-        run: sudo chmod 666 /dev/kvm
+        run: | 
+          if [ ! -c /dev/kvm ]; then
+            echo "/dev/kvm does not exist, skipping permission change"
+            exit 0
+          fi
+          sudo chmod 666 /dev/kvm
         
       - name: Run build script
         run: bash debian/docker-build.sh amd64
@@ -31,7 +36,12 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-arm gettext-base
 
       - name: Change permissions of /dev/kvm
-        run: sudo chmod 666 /dev/kvm
+        run: | 
+          if [ ! -c /dev/kvm ]; then
+            echo "/dev/kvm does not exist, skipping permission change"
+            exit 0
+          fi
+          sudo chmod 666 /dev/kvm
 
       - name: Run build script
         run: bash debian/docker-build.sh arm64
