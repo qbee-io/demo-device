@@ -17,7 +17,7 @@ jobs:
         with:
           repository: qbee-io/qbee-agent
           excludes: prelease,draft
-      
+     
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -31,13 +31,33 @@ jobs:
             exit 0
           fi
           sudo chmod 666 /dev/kvm
+      
       - name: Run build script
         run: | 
           echo "Latest qbee-agent release: ${{ steps.get-latest-release.outputs.release }}"
           export QBEE_AGENT_VERSION="${{ steps.get-latest-release.outputs.release }}"
           
           bash debian/docker-build.sh amd64
-            
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: ./debian/files
+          file: ./debian/Dockerfile.amd64
+          push: true
+          tags: |
+            qbeeio/qbee-demo-test:latest
+            qbeeio/qbee-demo-test:latest-debian
+            qbeeio/qbee-demo-test:${{ steps.get-latest-release.outputs.release }}-debian
+          platforms: linux/amd64
+
   # build-arm64:
   #   runs-on: ubuntu-24.04-arm
   #   steps:
