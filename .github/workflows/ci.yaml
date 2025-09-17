@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    
+
 jobs:
     
   build-amd64:
@@ -15,7 +15,7 @@ jobs:
         name: Get latest qbee-agent release
         uses: pozetroninc/github-action-get-latest-release@master
         with:
-          repository: qbeeio/qbee-agent
+          repository: qbee-io/qbee-agent
           excludes: prelease,draft
       
       - name: Checkout repository
