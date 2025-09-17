@@ -19,7 +19,7 @@ cloud-localds "$BASEDIR/cloud-init/seed.img" "$BASEDIR/cloud-init/user-data"
 QEMU_OPTIONS=""
 
 if [[ "$BUILD_ARCH" == "arm64" ]]; then
-  #QEMU_OPTIONS="$QEMU_OPTIONS -machine virt,gic-version=3 -cpu cortex-a57 -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd"
+
   rm -f $BASEDIR/varstore.img
   truncate -s 64M $BASEDIR/varstore.img
 
@@ -41,11 +41,15 @@ if [[ "$BUILD_ARCH" == "arm64" ]]; then
     -device virtio-net-pci,netdev=net0,mac=$MAC \
     -netdev user,id=net0,hostfwd=tcp::2222-:22 \
     $QEMU_OPTIONS
+
 elif [[ "$BUILD_ARCH" == "amd64" ]] && [[ -c /dev/kvm ]]; then
-  QEMU_OPTIONS="$QEMU_OPTIONS -machine type=pc,accel=kvm -smp 4 -cpu host -nographic"
-  #QEMU_OPTIONS="$QEMU_OPTIONS -machine type=pc -smp 4 -cpu max -nographic"
+  QEMU_OPTIONS="$QEMU_OPTIONS -smp 2 -nographic"
+  if [[ -c /dev/kvm ]]; then
+    QEMU_OPTIONS="$QEMU_OPTIONS -cpu host -enable-kvm"
+  fi
+ 
   qemu-system-${QEMU_ARCH} \
-  -m 1G \
+    -m 1G \
     -device virtio-net-pci,netdev=net0,mac=$MAC \
     -netdev user,id=net0,hostfwd=tcp::2222-:22 \
     -drive if=virtio,format=qcow2,file=$IMG \
