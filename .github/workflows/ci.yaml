@@ -24,18 +24,17 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-x86 gettext-base
 
       - name: Change permissions of /dev/kvm
-        run: | 
+        run: |
           if [ ! -c /dev/kvm ]; then
             echo "/dev/kvm does not exist, skipping permission change"
             exit 0
           fi
           sudo chmod 666 /dev/kvm
-      
+
       - name: Run build script
-        run: | 
+        run: |
           echo "Latest qbee-agent release: ${{ steps.get-latest-release.outputs.release }}"
           export QBEE_AGENT_VERSION="${{ steps.get-latest-release.outputs.release }}"
-          
           bash debian/docker-build.sh amd64
 
       - name: Log in to Docker Hub
@@ -57,22 +56,51 @@ jobs:
             qbeeio/qbee-demo-test:${{ steps.get-latest-release.outputs.release }}-debian
           platforms: linux/amd64
 
-  # build-arm64:
-  #   runs-on: ubuntu-24.04-arm
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - id: get-latest-release
+        name: Get latest qbee-agent release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: qbee-io/qbee-agent
+          excludes: prelease,draft
 
-  #     - name: Install dependencies
-  #       run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-arm gettext-base
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #     - name: Change permissions of /dev/kvm
-  #       run: | 
-  #         if [ ! -c /dev/kvm ]; then
-  #           echo "/dev/kvm does not exist, skipping permission change"
-  #           exit 0
-  #         fi
-  #         sudo chmod 666 /dev/kvm
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-arm gettext-base
 
-  #     - name: Run build script
-  #       run: bash debian/docker-build.sh arm64
+      - name: Change permissions of /dev/kvm
+        run: |
+          if [ ! -c /dev/kvm ]; then
+            echo "/dev/kvm does not exist, skipping permission change"
+            exit 0
+          fi
+          sudo chmod 666 /dev/kvm
+
+      - name: Run build script
+        run: |
+          echo "Latest qbee-agent release: ${{ steps.get-latest-release.outputs.release }}"
+          export QBEE_AGENT_VERSION="${{ steps.get-latest-release.outputs.release }}"
+          bash debian/docker-build.sh arm64
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: ./debian/files
+          file: ./debian/Dockerfile.amd64
+          push: true
+          tags: |
+            qbeeio/qbee-demo-test:latest
+            qbeeio/qbee-demo-test:latest-debian
+            qbeeio/qbee-demo-test:${{ steps.get-latest-release.outputs.release }}-debian
+          platforms: linux/arm64
