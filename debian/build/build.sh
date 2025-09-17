@@ -11,6 +11,8 @@ BASEDIR="$(cd "$(dirname "$0")" && pwd)"
 IMG="$BASEDIR/vmimage.$BUILD_ARCH.qcow2"
 MAC=$(echo "$HOSTNAME" | md5sum | sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\1:\2:\3:\4:\5/')
 
+export BUILD_ARCH
+
 envsubst < "$BASEDIR/cloud-init/user-data.template" > "$BASEDIR/cloud-init/user-data"
 cloud-localds "$BASEDIR/cloud-init/seed.img" "$BASEDIR/cloud-init/user-data"
 
