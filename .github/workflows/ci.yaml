@@ -1,14 +1,20 @@
 name: CI
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
+    
   build-amd64:
     runs-on: ubuntu-latest
     steps:
+      - id: get-latest-release
+        name: Get latest qbee-agent release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: qbeeio/qbee-agent
+          excludes: prelease,draft
+      
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -22,26 +28,30 @@ jobs:
             exit 0
           fi
           sudo chmod 666 /dev/kvm
-        
       - name: Run build script
-        run: bash debian/docker-build.sh amd64
-  
-  build-arm64:
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-arm gettext-base
-
-      - name: Change permissions of /dev/kvm
         run: | 
-          if [ ! -c /dev/kvm ]; then
-            echo "/dev/kvm does not exist, skipping permission change"
-            exit 0
-          fi
-          sudo chmod 666 /dev/kvm
+          echo "Latest qbee-agent release: ${{ steps.get-latest-release.outputs.release }}"
+          
+          export QBEE_AGENT_VERSION="${{ steps.get-latest-release.outputs.release }}"
+          
+          bash debian/docker-build.sh amd64
+            
+  # build-arm64:
+  #   runs-on: ubuntu-24.04-arm
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      - name: Run build script
-        run: bash debian/docker-build.sh arm64
+  #     - name: Install dependencies
+  #       run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils qemu-system-arm gettext-base
+
+  #     - name: Change permissions of /dev/kvm
+  #       run: | 
+  #         if [ ! -c /dev/kvm ]; then
+  #           echo "/dev/kvm does not exist, skipping permission change"
+  #           exit 0
+  #         fi
+  #         sudo chmod 666 /dev/kvm
+
+  #     - name: Run build script
+  #       run: bash debian/docker-build.sh arm64

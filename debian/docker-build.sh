@@ -27,4 +27,8 @@ install_image() {
 
 echo "Building for architecture: $BUILD_ARCH"
 install_image "$BUILD_ARCH"
-docker buildx build --platform "linux/$BUILD_ARCH" -t "qbeeio/qbee-demo:$QBEE_AGENT_VERSION" -f "$BASEDIR/Dockerfile.$BUILD_ARCH" "$BASEDIR/files" --load
+docker buildx build --platform "linux/$BUILD_ARCH" \
+  -t "qbeeio/qbee-demo:latest" \
+  -t "qbeeio/qbee-demo:latest-debian" \
+  -t "qbeeio/qbee-demo:${QBEE_AGENT_VERSION}-debian" \
+  -f "$BASEDIR/Dockerfile.$BUILD_ARCH" "$BASEDIR/files" --push
