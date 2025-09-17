@@ -2,7 +2,9 @@ name: CI
 
 on:
   workflow_dispatch:
-
+  push:
+    branches: [ main ]
+  pull_request:
 jobs:
     
   build-amd64:
@@ -31,7 +33,6 @@ jobs:
       - name: Run build script
         run: | 
           echo "Latest qbee-agent release: ${{ steps.get-latest-release.outputs.release }}"
-          
           export QBEE_AGENT_VERSION="${{ steps.get-latest-release.outputs.release }}"
           
           bash debian/docker-build.sh amd64
