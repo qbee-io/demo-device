@@ -51,10 +51,16 @@ if [[ "$ARCH" == "aarch64" ]]; then
   truncate -s 64M $BASEDIR/efi.img
   dd if=/usr/share/qemu/edk2-aarch64-code.fd of=$BASEDIR/efi.img conv=notrunc
 
+  QEMU_OPTIONS="-smp 4 -cpu max"
+  if [[ -c /dev/kvm ]]; then
+    QEMU_OPTIONS="-enable-kvm -cpu host"
+  fi
+
   qemu-system-aarch64 \
     -m 2G \
     -cpu max \
-    -M virt \
+    -smp 2 \
+    -machine virt \
     -nographic \
     -drive if=pflash,format=raw,file=$BASEDIR/efi.img,readonly=on \
     -drive if=pflash,format=raw,file=$BASEDIR/varstore.img \
@@ -68,10 +74,10 @@ if [[ "$ARCH" == "aarch64" ]]; then
 
 elif [[ "$ARCH" == "x86_64" ]]; then
   # Default options
-  QEMU_OPTIONS=" -machine type=pc -smp 4 -cpu host"
+  QEMU_OPTIONS=" -machine type=pc -smp 2"
 
   if [[ -c /dev/kvm ]]; then
-    QEMU_OPTIONS=" -machine type=pc,accel=kvm -smp 4 -cpu host"
+    QEMU_OPTIONS=" -machine type=pc,accel=kvm -smp 2 -cpu host"
   fi
   
   qemu-system-x86_64 \
