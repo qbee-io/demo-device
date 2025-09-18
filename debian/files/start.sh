@@ -37,10 +37,16 @@ qemu-img resize $IMG 8G
 
 ARCH=$(uname -m)
 
+TPM_DEVICE_NAME="tpm-tis"
+
+if [[ "$ARCH" == "aarch64" ]]; then
+  TPM_DEVICE_NAME="tpm-tis-device"
+fi
+
 TPM_OPTIONS=""
 
 if [[ -S $QBEE_TPM2_DIR/swtpm-sock ]]; then
-  TPM_OPTIONS=" -chardev socket,id=chrtpm,path=$QBEE_TPM2_DIR/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0"
+  TPM_OPTIONS=" -chardev socket,id=chrtpm,path=$QBEE_TPM2_DIR/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device $TPM_DEVICE_NAME,tpmdev=tpm0"
 fi
 
 
@@ -57,7 +63,7 @@ if [[ "$ARCH" == "aarch64" ]]; then
   fi
 
   qemu-system-aarch64 \
-    -m 2G \
+    -m 1024 \
     -cpu max \
     -smp 2 \
     -machine virt \
