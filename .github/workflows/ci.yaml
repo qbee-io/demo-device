@@ -2,9 +2,6 @@ name: CI
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
-  pull_request:
 
 jobs:
   build-amd64:
@@ -52,30 +49,30 @@ jobs:
           file: ./debian/Dockerfile.amd64
           push: true
           tags: |
-            qbeeio/qbee-demo-test:latest-amd64
-            qbeeio/qbee-demo-test:latest-debian-amd64
-            qbeeio/qbee-demo-test:${{ steps.get-latest-release.outputs.release }}-debian-amd64
+            qbeeio/qbee-demo:latest-amd64
+            qbeeio/qbee-demo:latest-debian-amd64
+            qbeeio/qbee-demo:${{ steps.get-latest-release.outputs.release }}-debian-amd64
           platforms: linux/amd64
 
       - name: Create and push multi-arch manifest
         run: |
-          docker manifest create qbeeio/qbee-demo-test:latest \
-            qbeeio/qbee-demo-test:latest-amd64 \
-            qbeeio/qbee-demo-test:latest-arm64
+          docker manifest create qbeeio/qbee-demo:latest \
+            qbeeio/qbee-demo:latest-amd64 \
+            qbeeio/qbee-demo:latest-arm64
 
-          docker manifest create qbeeio/qbee-demo-test:latest-debian \
-            qbeeio/qbee-demo-test:latest-debian-amd64 \
-            qbeeio/qbee-demo-test:latest-debian-arm64
+          docker manifest create qbeeio/qbee-demo:latest-debian \
+            qbeeio/qbee-demo:latest-debian-amd64 \
+            qbeeio/qbee-demo:latest-debian-arm64
 
           LATEST_RELEASE=${{ steps.get-latest-release.outputs.release }}
 
-          docker manifest create qbeeio/qbee-demo-test:${LATEST_RELEASE}-debian \
-            qbeeio/qbee-demo-test:${LATEST_RELEASE}-debian-amd64 \
-            qbeeio/qbee-demo-test:${LATEST_RELEASE}-debian-arm64
+          docker manifest create qbeeio/qbee-demo:${LATEST_RELEASE}-debian \
+            qbeeio/qbee-demo:${LATEST_RELEASE}-debian-amd64 \
+            qbeeio/qbee-demo:${LATEST_RELEASE}-debian-arm64
 
-          docker manifest push qbeeio/qbee-demo-test:latest
-          docker manifest push qbeeio/qbee-demo-test:latest-debian
-          docker manifest push qbeeio/qbee-demo-test:${LATEST_RELEASE}-debian
+          docker manifest push qbeeio/qbee-demo:latest
+          docker manifest push qbeeio/qbee-demo:latest-debian
+          docker manifest push qbeeio/qbee-demo:${LATEST_RELEASE}-debian
 
   build-arm64:
     runs-on: ubuntu-24.04-arm
@@ -121,8 +118,8 @@ jobs:
           file: ./debian/Dockerfile.arm64
           push: true
           tags: |
-            qbeeio/qbee-demo-test:latest-arm64
-            qbeeio/qbee-demo-test:latest-debian-arm64
-            qbeeio/qbee-demo-test:${{ steps.get-latest-release.outputs.release }}-debian-arm64
+            qbeeio/qbee-demo:latest-arm64
+            qbeeio/qbee-demo:latest-debian-arm64
+            qbeeio/qbee-demo:${{ steps.get-latest-release.outputs.release }}-debian-arm64
           platforms: linux/arm64
 
