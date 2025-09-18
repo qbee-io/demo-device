@@ -34,24 +34,68 @@ cloud-localds $BASEDIR/cloud-init/seed.img $BASEDIR/cloud-init/user-data $BASEDI
 
 IMG="$BASEDIR/vmimage.qcow2"
 qemu-img resize $IMG 8G
-  
-QEMU_OPTIONS=""
 
-if [[ -c /dev/kvm ]]; then
-  QEMU_OPTIONS="$QEMU_OPTIONS -machine type=pc,accel=kvm -smp 4 -cpu host"
+ARCH=$(uname -m)
+
+TPM_DEVICE_NAME="tpm-tis"
+
+if [[ "$ARCH" == "aarch64" ]]; then
+  TPM_DEVICE_NAME="tpm-tis-device"
 fi
+
+TPM_OPTIONS=""
 
 if [[ -S $QBEE_TPM2_DIR/swtpm-sock ]]; then
-  QEMU_OPTIONS="$QEMU_OPTIONS -chardev socket,id=chrtpm,path=$QBEE_TPM2_DIR/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0"
+  TPM_OPTIONS=" -chardev socket,id=chrtpm,path=$QBEE_TPM2_DIR/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device $TPM_DEVICE_NAME,tpmdev=tpm0"
 fi
 
-qemu-system-x86_64 \
-  -m 512 \
-  -smp 4 \
+
+if [[ "$ARCH" == "aarch64" ]]; then
+
+  truncate -s 64M $BASEDIR/varstore.img
+
+  truncate -s 64M $BASEDIR/efi.img
+  dd if=/usr/share/qemu/edk2-aarch64-code.fd of=$BASEDIR/efi.img conv=notrunc
+
+  QEMU_OPTIONS="-smp 2 -cpu max"
+  if [[ -c /dev/kvm ]]; then
+    QEMU_OPTIONS="-enable-kvm -cpu host"
+  fi
+
+  qemu-system-aarch64 \
+    -m 1024 \
+    -cpu max \
+    -smp 2 \
+    -machine virt \
+    -nographic \
+    -drive if=pflash,format=raw,file=$BASEDIR/efi.img,readonly=on \
+    -drive if=pflash,format=raw,file=$BASEDIR/varstore.img \
+    -drive if=none,file=$IMG,id=hd0 \
+    -device virtio-blk-device,drive=hd0 \
+    -drive if=none,format=raw,file=$BASEDIR/cloud-init/seed.img,id=cloud \
+    -device virtio-blk-device,drive=cloud \
+    -device virtio-net-pci,netdev=net0,mac=$MAC \
+    -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+    $TPM_OPTIONS
+
+elif [[ "$ARCH" == "x86_64" ]]; then
+  # Default options
+  QEMU_OPTIONS=""
+
+  if [[ -c /dev/kvm ]]; then
+    QEMU_OPTIONS="-enable-kvm -cpu host"
+  fi
+  
+  qemu-system-x86_64 \
+  -m 1024 \
+  -smp 2 \
   -nographic \
   -device virtio-net-pci,netdev=net0,mac=$MAC \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -drive if=virtio,format=qcow2,file=$IMG \
   -drive if=virtio,format=raw,file=$BASEDIR/cloud-init/seed.img \
-  $QEMU_OPTIONS
+  $QEMU_OPTIONS $TPM_OPTIONS
+fi
+
+
 

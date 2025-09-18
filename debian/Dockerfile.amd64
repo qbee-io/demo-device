@@ -1,0 +1,8 @@
+FROM alpine:latest
+ARG TARGETARCH
+RUN apk add qemu-system-x86_64 cloud-utils-localds qemu-img envsubst swtpm
+COPY start.sh /qbee-demo/start.sh
+COPY cloud-init /qbee-demo/cloud-init
+COPY vmimage.$TARGETARCH.qcow2 /qbee-demo/vmimage.qcow2
+
+CMD ["/bin/sh", "/qbee-demo/start.sh" ]

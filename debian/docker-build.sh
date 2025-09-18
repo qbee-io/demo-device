@@ -1,24 +1,34 @@
 #!/usr/bin/env bash
 
 set -e
-BASEDIR=$(cd $(dirname $0) && pwd)
+BASEDIR="$(cd "$(dirname "$0")" && pwd)"
+
+BUILD_ARCH=${1:-"amd64"}
+
+QBEE_AGENT_VERSION=${QBEE_AGENT_VERSION:-latest}
 
 install_image() {
-  BASEIMAGE="debian-12-genericcloud-amd64.qcow2"
+
+  local ARCH=$1
+
+  BASEIMAGE="debian-12-genericcloud-$ARCH.qcow2"
 
   if [[ ! -f "$BASEDIR/$BASEIMAGE" ]]; then
-    wget "https://cloud.debian.org/images/cloud/bookworm/latest/$BASEIMAGE"
+    wget --quiet \
+      --output-document="$BASEDIR/$BASEIMAGE" \
+      "https://cloud.debian.org/images/cloud/bookworm/latest/$BASEIMAGE"
   fi
 
-  cp $BASEIMAGE $BASEDIR/build/vmimage.qcow2
+  cp "$BASEDIR/$BASEIMAGE" "$BASEDIR/build/vmimage.$ARCH.qcow2"
+  bash "$BASEDIR/build/build.sh" "$ARCH" 
 
-  QBEE_AGENT_VERSION=${QBEE_AGENT_VERSION:-latest}
-
-  bash $BASEDIR/build/build.sh $QBEE_AGENT_VERSION
-
-  mv $BASEDIR/build/vmimage.qcow2 $BASEDIR/files
+  mv "$BASEDIR/build/vmimage.$ARCH.qcow2" "$BASEDIR/files"
 }
 
-install_image
-
-docker build -t qbeeio/qbee-demo:$QBEE_AGENT_VERSION -f $BASEDIR/Dockerfile $BASEDIR/files
+echo "Building for architecture: $BUILD_ARCH"
+install_image "$BUILD_ARCH"
+#docker buildx build --platform "linux/$BUILD_ARCH" \
+#  -t "qbeeio/qbee-demo:latest" \
+#  -t "qbeeio/qbee-demo:latest-debian" \
+#  -t "qbeeio/qbee-demo:${QBEE_AGENT_VERSION}-debian" \
+#  -f "$BASEDIR/Dockerfile.$BUILD_ARCH" "$BASEDIR/files" --load
