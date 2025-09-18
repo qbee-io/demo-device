@@ -67,7 +67,7 @@ jobs:
             qbeeio/qbee-demo-test:latest-debian-amd64 \
             qbeeio/qbee-demo-test:latest-debian-arm64
 
-          LATEST_RELEASE=$${{ steps.get-latest-release.outputs.release }}
+          LATEST_RELEASE=${{ steps.get-latest-release.outputs.release }}
 
           docker manifest create qbeeio/qbee-demo-test:${LATEST_RELEASE}-debian \
             qbeeio/qbee-demo-test:${LATEST_RELEASE}-debian-amd64 \
