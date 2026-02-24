@@ -15,6 +15,22 @@ packages:
   - docker-ce-cli
   - podman
 
+write_files:
+  - path: /etc/profile.d/resize-console.sh
+    content: |
+      console_resize() {
+        old=$(stty -g)
+        stty -echo
+        printf '\033[18t'
+        IFS=';' read -d t _ rows cols _
+        stty "$old"
+          stty cols "$cols" rows "$rows"
+      }
+
+      if [ $(tty) == '/dev/ttyS0' ]; then
+        trap console_resize DEBUG
+      fi
+
 runcmd:
   - |
     wget -O /tmp/qbee-agent-installer.sh -q https://raw.githubusercontent.com/qbee-io/qbee-agent-installers/main/qbee-agent-installer.sh

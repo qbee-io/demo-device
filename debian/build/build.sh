@@ -13,7 +13,7 @@ MAC=$(echo "$HOSTNAME" | md5sum | sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\
 
 export BUILD_ARCH
 
-envsubst < "$BASEDIR/cloud-init/user-data.template" > "$BASEDIR/cloud-init/user-data"
+envsubst < "$BASEDIR/cloud-init/user-data.template" '\$BUILD_ARCH' > "$BASEDIR/cloud-init/user-data"
 cloud-localds "$BASEDIR/cloud-init/seed.img" "$BASEDIR/cloud-init/user-data"
 
 QEMU_OPTIONS=""
