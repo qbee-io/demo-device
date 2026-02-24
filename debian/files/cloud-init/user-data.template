@@ -23,14 +23,20 @@ write_files:
 ssh_pwauth: True
 bootcmd:
   - |
+    if [ -n "${QBEE_DEMO_DEVICE_HUB_CA_CERT}" ]; then
+      echo "${QBEE_DEMO_DEVICE_HUB_CA_CERT}" | base64 -d > /etc/qbee/ppkeys/ca.cert
+    fi
+  - |
     if [ ! -f /etc/qbee/qbee-agent.json ]; then
-      if [ -c /dev/tpm0 ]; then
+      if [ -c /dev/tpmrm0 ]; then
         qbee-agent bootstrap -k $QBEE_DEMO_BOOTSTRAP_KEY \
           --device-hub-host $QBEE_DEMO_DEVICE_HUB_HOST \
-          --tpm-device /dev/tpm0 2>&1 > /dev/null
+          --device-hub-port $QBEE_DEMO_DEVICE_HUB_PORT \
+          --tpm-device /dev/tpmrm0 2>&1 > /dev/null
       else
         qbee-agent bootstrap -k $QBEE_DEMO_BOOTSTRAP_KEY \
-          --device-hub-host $QBEE_DEMO_DEVICE_HUB_HOST 2>&1 > /dev/null
+          --device-hub-host $QBEE_DEMO_DEVICE_HUB_HOST \
+          --device-hub-port $QBEE_DEMO_DEVICE_HUB_PORT 2>&1 > /dev/null
       fi
     fi
 
