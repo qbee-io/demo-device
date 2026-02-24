@@ -11,12 +11,12 @@ install_image() {
 
   local ARCH=$1
 
-  BASEIMAGE="debian-12-genericcloud-$ARCH.qcow2"
+  BASEIMAGE="debian-13-genericcloud-$ARCH.qcow2"
 
   if [[ ! -f "$BASEDIR/$BASEIMAGE" ]]; then
     wget --quiet \
       --output-document="$BASEDIR/$BASEIMAGE" \
-      "https://cloud.debian.org/images/cloud/bookworm/latest/$BASEIMAGE"
+      "https://cloud.debian.org/images/cloud/trixie/latest/$BASEIMAGE"
   fi
 
   cp "$BASEDIR/$BASEIMAGE" "$BASEDIR/build/vmimage.$ARCH.qcow2"
@@ -27,8 +27,3 @@ install_image() {
 
 echo "Building for architecture: $BUILD_ARCH"
 install_image "$BUILD_ARCH"
-#docker buildx build --platform "linux/$BUILD_ARCH" \
-#  -t "qbeeio/qbee-demo:latest" \
-#  -t "qbeeio/qbee-demo:latest-debian" \
-#  -t "qbeeio/qbee-demo:${QBEE_AGENT_VERSION}-debian" \
-#  -f "$BASEDIR/Dockerfile.$BUILD_ARCH" "$BASEDIR/files" --load
