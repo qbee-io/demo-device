@@ -7,7 +7,7 @@ jobs:
   build:
     strategy:
       matrix:
-        arch: [x86-64,arm64]
+        arch: [x86-64,arm]
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 600
     container:
