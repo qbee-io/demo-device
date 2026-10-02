@@ -5,7 +5,9 @@ permissions:
 
 jobs:
   test:
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: 
+        labels: [self-hosted, Linux, X64]
+        group: "public-group"
     steps:
       - name: Ping
         run: echo "Runner is working!"
