@@ -33,4 +33,4 @@ jobs:
           clean: true
           fetch-depth: 0
       - name: Run kas for the machine
-        run: kas build yocto-kas/kas-qbee-${{ matrix.arch }}.yaml
+        run: kas build yocto-kas/kas-qbee-${{ matrix.arch }}.yml
