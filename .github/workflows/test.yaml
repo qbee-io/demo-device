@@ -7,7 +7,7 @@ jobs:
   test:
     runs-on: 
         labels: [self-hosted, Linux, X64]
-        group: "public-group"
+        group: "public-repos"
     steps:
       - name: Ping
         run: echo "Runner is working!"
