@@ -1,0 +1,21 @@
+header:
+  version: 14
+
+# Passed through from the host environment to bitbake
+env:
+  QBEE_BOOTSTRAP_KEY: ""
+
+repos:
+  meta-qbee:
+    url: "https://github.com/qbee-io/meta-qbee.git"
+    branch: master
+    path: layers/meta-qbee
+    layers:
+      meta-qbee:
+
+local_conf_header:
+  meta-qbee: |
+    IMAGE_INSTALL:append = " qbee-agent"
+  shared-dirs: |
+    # Shared between machine builds; DL_DIR from the kas environment takes precedence
+    DL_DIR ?= "${TOPDIR}/../downloads"

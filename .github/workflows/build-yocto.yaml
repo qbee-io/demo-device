@@ -1,0 +1,36 @@
+permissions:
+  contents: read
+name: meta-qbee-pr-tests
+on:
+    pull_request:
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch: [x86-64,arm64]
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 600
+    container:
+      image: ghcr.io/siemens/kas/kas:5.0-debian-bookworm
+      options: --user 1000:1000
+      env:
+        KAS_CLONE_DEPTH: 0
+        DL_DIR: /ci/demo-device/downloads
+        SSTATE_DIR: /ci/demo-device/${{ matrix.arch }}/sstate
+        TMPDIR: /ci/demo-device/${{ matrix.arch }}/tmp
+        # Environment variable for bootstrap key
+        # This should be set in the GitHub repository secrets for security
+        # when running integration tests with the platform
+        QBEE_BOOTSTRAP_KEY: my-bootstrap-key
+      volumes:
+        - /home/runner/ci/demo-device:/ci/demo-device
+        - /etc/passwd:/etc/passwd:ro
+        - /etc/group:/etc/group:ro
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-depth: 0
+      - name: Run kas for the machine
+        run: kas build yocto-kas/kas-qbee-${{ matrix.arch }}.yaml

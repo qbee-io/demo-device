@@ -1,0 +1,23 @@
+header:
+  version: 14
+  includes:
+    - repo: meta-rauc-community
+      file: meta-rauc-qemuarm/kas-qemuarm.yml
+    - kas-qbee.yml
+
+defaults:
+  repos:
+    branch: wrynose
+
+repos:
+  # No wrynose branch upstream
+  meta-rauc-community:
+    url: "https://github.com/rauc/meta-rauc-community.git"
+    branch: master
+    path: layers/meta-rauc-community
+  meta-rauc:
+    branch: wrynose
+  meta-qbee:
+    branch: wrynose
+  bitbake:
+    branch: "2.18"
