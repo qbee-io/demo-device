@@ -37,7 +37,7 @@ jobs:
         run: kas build yocto-kas/kas-qbee-${{ matrix.arch }}.yml
 
       - name: Resolve build artifacts
-        run: ls -l /ci/demo-device/${{ matrix.arch }}/tmp/deploy/qemu${{ matrix.arch }}
+        run: ls -l /ci/demo-device/${{ matrix.arch }}/tmp/deploy/images/qemu${{ matrix.arch }}
 
       # - name: Upload build artifacts
       #   uses: actions/upload-artifact@v3
