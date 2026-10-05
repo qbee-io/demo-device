@@ -2,8 +2,8 @@ header:
   version: 14
   includes:
     - repo: meta-rauc-community
-      file: meta-rauc-qemux86/kas-qemu-grub.yml
-    - kas-qbee.yml
+      file: meta-rauc-qemuarm/kas-qemuarm.yml
+    - kas/kas-qbee.yml
 
 defaults:
   repos:
@@ -15,6 +15,8 @@ repos:
     url: "https://github.com/rauc/meta-rauc-community.git"
     branch: master
     path: layers/meta-rauc-community
+  meta-rauc:
+    branch: wrynose
   meta-qbee:
     branch: wrynose
   bitbake:
