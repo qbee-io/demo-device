@@ -34,7 +34,9 @@ jobs:
           fetch-depth: 0
 
       - name: Run kas for ${{ matrix.arch }}
-        run: kas build yocto-kas/kas-qbee-${{ matrix.arch }}.yml
+        env:
+          KAS_WORK_DIR: $GITHUB_WORKSPACE/yocto-kas
+        run: kas build kas-qbee-${{ matrix.arch }}.yml
 
       - name: Resolve build artifacts
         run: ls -l /ci/demo-device/${{ matrix.arch }}/tmp/deploy/images/qemu${{ matrix.arch }}
@@ -46,7 +48,9 @@ jobs:
       #     path: /ci/demo-device/${{ matrix.arch }}/tmp/deploy
 
       - name: Run kas for ${{ matrix.arch }} again with extra package
-        run: kas build yocto-kas/kas-qbee-${{ matrix.arch }}.yml:kas-qbee-nano.yml
+        env:
+          KAS_WORK_DIR: $GITHUB_WORKSPACE/yocto-kas
+        run: kas build kas-qbee-${{ matrix.arch }}.yml:kas-qbee-nano.yml
       # - name: Upload build artifacts for the second build
       #   uses: actions/upload-artifact@v3
       #   with:
