@@ -7,7 +7,7 @@ jobs:
   build:
     strategy:
       matrix:
-        arch: [x86-64,arm]
+        arch: [x86-64,arm64]
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 600
     container:
@@ -28,9 +28,27 @@ jobs:
         - /etc/group:/etc/group:ro
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           clean: true
           fetch-depth: 0
-      - name: Run kas for the machine
+
+      - name: Run kas for ${{ matrix.arch }}
         run: kas build yocto-kas/kas-qbee-${{ matrix.arch }}.yml
+
+      - name: Resolve build artifacts
+        run: ls -l /ci/demo-device/${{ matrix.arch }}/tmp/deploy/qemu${{ matrix.arch }}
+
+      # - name: Upload build artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: build-artifacts
+      #     path: /ci/demo-device/${{ matrix.arch }}/tmp/deploy
+
+      - name: Run kas for ${{ matrix.arch }} again with extra package
+        run: kas build yocto-kas/kas-qbee-${{ matrix.arch }}.yml:kas-qbee-nano.yml
+      # - name: Upload build artifacts for the second build
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: build-artifacts-extra
+      #     path: /ci/demo-device/${{ matrix.arch }}/tmp/deploy

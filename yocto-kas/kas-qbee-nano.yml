@@ -1,0 +1,18 @@
+header:
+  version: 14
+
+# Overlay on top of an arch config, e.g.:
+#   kas build kas-qbee-x86-64.yml:kas-qbee-nano.yml
+#   kas build kas-qbee-arm.yml:kas-qbee-nano.yml
+
+repos:
+  # nano lives in meta-oe; branch follows the arch config's defaults
+  meta-openembedded:
+    url: "https://github.com/openembedded/meta-openembedded.git"
+    path: layers/meta-openembedded
+    layers:
+      meta-oe:
+
+local_conf_header:
+  nano: |
+    IMAGE_INSTALL:append = " nano"
