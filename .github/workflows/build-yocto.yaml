@@ -70,6 +70,29 @@ jobs:
           path: artifacts/${{ matrix.arch }}
           if-no-files-found: error
 
+      - name: Build wic-tools for ${{ matrix.arch }}
+        run: kas build --target wic-tools kas/kas-qbee-${{ matrix.arch }}.yml
+
+      - name: Collect wic-tools native sysroot
+        run: |
+          set -eu
+          work=/ci/demo-device/${{ matrix.arch }}/tmp/work
+          sysroot=$(find "$work" -mindepth 4 -maxdepth 4 -type d -path '*/wic-tools/*/recipe-sysroot-native' | head -n1)
+          [ -n "$sysroot" ] || { echo "wic-tools recipe-sysroot-native not found" >&2; exit 1; }
+          out=artifacts/wic-tools-${{ matrix.arch }}
+          rm -rf "$out" && mkdir -p "$out"
+          # tar preserves symlinks and permissions, which upload-artifact drops
+          tar -C "$(dirname "$sysroot")" -czf "$out/wic-tools-native-${{ matrix.arch }}.tar.gz" recipe-sysroot-native
+          ls -l "$out"
+
+      - name: Upload wic-tools native sysroot
+        uses: actions/upload-artifact@v4
+        with:
+          name: wic-tools-native-${{ matrix.arch }}
+          path: artifacts/wic-tools-${{ matrix.arch }}
+          compression-level: 0
+          if-no-files-found: error
+
       - name: Run kas for ${{ matrix.arch }} again with extra package
         run: kas build kas/kas-qbee-${{ matrix.arch }}.yml:kas/kas-qbee-nano.yml
 
