@@ -16,3 +16,5 @@ repos:
 local_conf_header:
   nano: |
     IMAGE_INSTALL:append = " nano"
+    RAUC_BUNDLE_VERSION:forcevariable = "1.1"
+    RAUC_BUNDLE_DESCRIPTION:forcevariable = "Version 1.1 with nano"
