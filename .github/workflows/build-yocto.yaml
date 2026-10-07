@@ -32,6 +32,11 @@ jobs:
           clean: true
           fetch-depth: 0
 
+      - name: clean target state
+        run: | 
+          kas shell -c "bitbake -fc do_cleansstate core-image-minimal qbee-agent" kas/kas-qbee-${{ matrix.arch }}.yml
+          kas shell -c "bitbake -fc clean core-image-minimal qbee-agent" kas/kas-qbee-${{ matrix.arch }}.yml
+
       - name: Run kas for ${{ matrix.arch }}
         run: kas build kas/kas-qbee-${{ matrix.arch }}.yml
 
