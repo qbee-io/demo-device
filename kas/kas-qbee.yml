@@ -19,3 +19,4 @@ local_conf_header:
   shared-dirs: |
     # Shared between machine builds; DL_DIR from the kas environment takes precedence
     DL_DIR ?= "${TOPDIR}/../downloads"
+    INHERIT += "rm_work"
