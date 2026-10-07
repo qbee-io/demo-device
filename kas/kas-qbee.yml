@@ -26,7 +26,7 @@ local_conf_header:
     RAUC_BUNDLE_DESCRIPTION:forcevariable = "Version 1.0"
 
     # DISTRO_CHANGELOG_PATH = "${TOPDIR}/../meta-container-os/files/changelog.txt"
-    INHERIT += "rauc-distro-meta"
+    # INHERIT += "rauc-distro-meta"
 
     RAUC_META_release_info[ticket] = "NOJIRA-test-ticket"
     RAUC_META_release_info[author] = "qbee.io"
