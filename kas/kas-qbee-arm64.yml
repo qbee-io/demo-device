@@ -21,3 +21,7 @@ repos:
     branch: wrynose
   bitbake:
     branch: "2.18"
+
+target:
+  - core-image-minimal
+  - update-bundle

@@ -49,13 +49,13 @@ jobs:
               bundle="update-bundle-qemuarm64.raucb"
               images="core-image-minimal-qemuarm64.rootfs.wic.qcow2 bootenv.img u-boot.bin" ;;
             x86-64)
-              bundle="core-bundle-minimal-qemux86-64.raucb"
+              bundle="qemu-demo-bundle-qemux86-64.raucb"
               images="core-image-minimal-qemux86-64.rootfs.wic ovmf.qcow2" ;;
           esac
           # -L dereferences the deploy dir symlinks
           if [ "$BUNDLE_ONLY" = "true" ]; then
-            # e.g. core-bundle-minimal-qemux86-64.raucb -> core-bundle-minimal-nano-qemux86-64.raucb
-            cp -L "$deploy/$bundle" "$out/${bundle%-qemu*}-nano-qemu${bundle##*-qemu}"
+            # e.g. qemu-demo-bundle-qemux86-64.raucb -> qemu-demo-bundle-nano-qemux86-64.raucb
+            cp -L "$deploy/$bundle" "$out/${bundle%-qemu-demo*}-nano-qemu${bundle##*-qemu}"
           else
             for f in $bundle $images; do
               cp -L "$deploy/$f" "$out/"
