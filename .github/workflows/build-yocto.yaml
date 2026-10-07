@@ -19,9 +19,8 @@ jobs:
         SSTATE_DIR: /ci/demo-device/${{ matrix.arch }}/sstate
         TMPDIR: /ci/demo-device/${{ matrix.arch }}/tmp
         # Environment variable for bootstrap key
-        # This should be set in the GitHub repository secrets for security
-        # when running integration tests with the platform
-        # QBEE_BOOTSTRAP_KEY: my-bootstrap-key
+        # set it to empty for testing purposes
+        QBEE_BOOTSTRAP_KEY:
       volumes:
         - /home/runner/ci/demo-device:/ci/demo-device
         - /etc/passwd:/etc/passwd:ro

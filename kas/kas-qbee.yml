@@ -2,8 +2,8 @@ header:
   version: 14
 
 # Passed through from the host environment to bitbake
-# env:
-#   QBEE_BOOTSTRAP_KEY: ""
+env:
+  QBEE_BOOTSTRAP_KEY: ""
 
 repos:
   meta-qbee:
