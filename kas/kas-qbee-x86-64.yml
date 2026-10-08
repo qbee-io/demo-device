@@ -1,20 +1,15 @@
 header:
   version: 14
   includes:
-    - repo: meta-rauc-community
-      file: meta-rauc-qemux86/kas-qemu-grub.yml
     - kas/kas-qbee.yml
+
+machine: qemux86-64
 
 defaults:
   repos:
     branch: wrynose
 
 repos:
-  # No wrynose branch upstream
-  meta-rauc-community:
-    url: "https://github.com/rauc/meta-rauc-community.git"
-    branch: master
-    path: layers/meta-rauc-community
   meta-qbee:
     branch: wrynose
   bitbake:
@@ -23,3 +18,9 @@ repos:
 target:
   - core-image-minimal
   - qemu-demo-bundle
+
+local_conf_header:
+  machine: |
+    IMAGE_INSTALL:append = " rauc"
+    EXTRA_IMAGEDEPENDS += "ovmf"
+    PREFERRED_RPROVIDER_virtual-grub-bootconf = "rauc-qemu-grubconf"
