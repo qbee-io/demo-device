@@ -3,7 +3,6 @@ IMAGE_INSTALL:append = " \
     u-boot-default-env \
     kernel-image \
     devicetree-qemuarm \
-    rauc \
     mtd-utils \
 "
 

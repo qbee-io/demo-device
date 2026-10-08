@@ -44,6 +44,7 @@ local_conf_header:
     BB_HASHSERVE_DB_DIR = "${SSTATE_DIR}"
     INHERIT += "rm_work"
   rauc_configuration: |
+    IMAGE_INSTALL:append = " rauc"
     IMAGE_FSTYPES = "wic ext4"
     RAUC_SLOT_rootfs[fstype] = "ext4"
     RAUC_SLOT_rootfs[adaptive] = "block-hash-index"

@@ -17,7 +17,7 @@ repos:
 
 target:
   - core-image-minimal
-  - update-bundle
+  - qemu-demo-bundle
 
 local_conf_header:
   machine: |

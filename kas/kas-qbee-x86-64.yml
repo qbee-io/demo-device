@@ -21,6 +21,5 @@ target:
 
 local_conf_header:
   machine: |
-    IMAGE_INSTALL:append = " rauc"
     EXTRA_IMAGEDEPENDS += "ovmf"
     PREFERRED_RPROVIDER_virtual-grub-bootconf = "rauc-qemu-grubconf"
