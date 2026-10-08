@@ -56,6 +56,11 @@ local_conf_header:
     RAUC_META_release_info[ticket] = "NOJIRA-test-ticket"
     RAUC_META_release_info[author] = "qbee.io"
     IMAGE_ROOTFS_ALIGNMENT = "4"
+    # Must match --fixed-size of root_a/root_b in the .wks files (250M = 256000 KiB)
+    IMAGE_ROOTFS_SIZE = "256000"
+    IMAGE_ROOTFS_MAXSIZE = "256000"
+    IMAGE_ROOTFS_EXTRA_SPACE = "0"
+    IMAGE_OVERHEAD_FACTOR = "1.0"
     # ext4 block size should be set to 4K and use a fixed directory hash seed to
     # reduce the image delta size (keep oe-core's 4K bytes-per-inode)
     EXTRA_IMAGECMD:ext4 = "-i 4096 -b 4096 -E hash_seed=86ca73ff-7379-40bd-a098-fcb03a6e719d"
