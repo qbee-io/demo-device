@@ -56,9 +56,10 @@ local_conf_header:
     RAUC_META_release_info[ticket] = "NOJIRA-test-ticket"
     RAUC_META_release_info[author] = "qbee.io"
     IMAGE_ROOTFS_ALIGNMENT = "4"
-    # Must match --fixed-size of root_a/root_b in the .wks files (300M = 307200 KiB)
-    IMAGE_ROOTFS_SIZE = "307200"
-    IMAGE_ROOTFS_MAXSIZE = "307200"
+    # Must match --fixed-size of root_a/root_b in the .wks files (250M = 256000 KiB).
+    # core-image-minimal appends "+ 4096" to IMAGE_ROOTFS_EXTRA_SPACE for systemd, so subtract it.
+    IMAGE_ROOTFS_SIZE = "${@256000 - eval(d.getVar('IMAGE_ROOTFS_EXTRA_SPACE'))}"
+    IMAGE_ROOTFS_MAXSIZE = "256000"
     IMAGE_ROOTFS_EXTRA_SPACE = "0"
     IMAGE_OVERHEAD_FACTOR = "1.0"
     # ext4 block size should be set to 4K and use a fixed directory hash seed to
