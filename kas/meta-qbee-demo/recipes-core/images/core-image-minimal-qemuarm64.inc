@@ -4,7 +4,6 @@ IMAGE_INSTALL:append = " \
     kernel-image \
     devicetree-qemuarm \
     rauc \
-    e2fsprogs-mke2fs \
     mtd-utils \
 "
 
