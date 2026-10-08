@@ -12,7 +12,7 @@ bootloader --ptable gpt
 
 part --ondisk vda --source bootimg-partition --fstype=vfat --active --fixed-size 16M --label bootfiles --align 4096
 
-part / --ondisk vda --source rootfs --fstype=ext4 --fixed-size 250M --label root_a --align 4096
-part / --ondisk vda --source empty --fstype=ext4 --fixed-size 250M --label root_b --align 4096
+part / --ondisk vda --source rootfs --fstype=ext4 --fixed-size 300M --label root_a --align 4096
+part / --ondisk vda --source empty --fstype=ext4 --fixed-size 300M --label root_b --align 4096
 
 part /data --ondisk vda --fstype=ext4 --size 100M --label data
