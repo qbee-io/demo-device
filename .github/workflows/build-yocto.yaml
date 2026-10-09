@@ -1,0 +1,89 @@
+permissions:
+  contents: read
+name: meta-qbee-pr-tests
+on:
+    pull_request:
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch: [x86-64,arm64]
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 600
+    container:
+      image: ghcr.io/siemens/kas/kas:5.0-debian-bookworm
+      options: --user 1000:1000
+      env:
+        KAS_CLONE_DEPTH: 0
+        DL_DIR: /ci/demo-device/downloads
+        SSTATE_DIR: /ci/demo-device/${{ matrix.arch }}/sstate
+        TMPDIR: /ci/demo-device/${{ matrix.arch }}/tmp
+        # Environment variable for bootstrap key
+        # set it to empty for testing purposes
+        QBEE_BOOTSTRAP_KEY:
+      volumes:
+        - /home/runner/ci/demo-device:/ci/demo-device
+        - /etc/passwd:/etc/passwd:ro
+        - /etc/group:/etc/group:ro
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          clean: true
+          fetch-depth: 0
+
+      - name: clean target state
+        run: | 
+          kas shell -c "bitbake -fc do_cleansstate core-image-minimal qbee-agent" kas/kas-qbee-${{ matrix.arch }}.yml
+          kas shell -c "bitbake -fc clean core-image-minimal qbee-agent" kas/kas-qbee-${{ matrix.arch }}.yml
+
+      - name: Run kas for ${{ matrix.arch }}
+        run: kas build kas/kas-qbee-${{ matrix.arch }}.yml
+
+      - name: Collect build artifacts
+        env:
+          BUNDLE_ONLY: "false"
+        run: &collect |
+          set -eu
+          deploy=/ci/demo-device/${{ matrix.arch }}/tmp/deploy/images/qemu${{ matrix.arch }}
+          out=artifacts/${{ matrix.arch }}
+          rm -rf "$out" && mkdir -p "$out"
+          bundle="qemu-demo-bundle-qemu${{ matrix.arch }}.raucb"
+          case "${{ matrix.arch }}" in
+            arm64)
+              images="core-image-minimal-qemuarm64.rootfs.wic bootenv.img u-boot.bin" ;;
+            x86-64)
+              images="core-image-minimal-qemux86-64.rootfs.wic ovmf.qcow2" ;;
+          esac
+          # -L dereferences the deploy dir symlinks
+          if [ "$BUNDLE_ONLY" = "true" ]; then
+            # e.g. qemu-demo-bundle-qemux86-64.raucb -> qemu-demo-bundle-nano-qemux86-64.raucb
+            cp -L "$deploy/$bundle" "$out/${bundle%-qemu*}-nano-qemu${bundle##*-qemu}"
+          else
+            for f in $bundle $images; do
+              cp -L "$deploy/$f" "$out/"
+            done
+          fi
+          ls -l "$out"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.arch }}
+          path: artifacts/${{ matrix.arch }}
+          if-no-files-found: error
+
+      - name: Run kas for ${{ matrix.arch }} again with extra package
+        run: kas build kas/kas-qbee-${{ matrix.arch }}.yml:kas/kas-qbee-nano.yml
+
+      - name: Collect build artifacts for the second build
+        env:
+          BUNDLE_ONLY: "true"
+        run: *collect
+
+      - name: Upload build artifacts for the second build
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-extra-${{ matrix.arch }}
+          path: artifacts/${{ matrix.arch }}
+          if-no-files-found: error

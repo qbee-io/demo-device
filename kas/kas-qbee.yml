@@ -1,0 +1,69 @@
+header:
+  version: 14
+
+distro: nodistro
+
+# Passed through from the host environment to bitbake
+env:
+  QBEE_BOOTSTRAP_KEY: ""
+
+repos:
+  bitbake:
+    url: "https://github.com/openembedded/bitbake.git"
+    path: layers/bitbake
+    # this repo does not provide any layers
+    layers:
+      .: disabled
+  openembedded-core:
+    url: "https://github.com/openembedded/openembedded-core.git"
+    path: layers/openembedded-core
+    layers:
+      meta:
+  meta-rauc:
+    url: "https://github.com/rauc/meta-rauc.git"
+    path: layers/meta-rauc
+  meta-qbee:
+    url: "https://github.com/qbee-io/meta-qbee.git"
+    branch: master
+    path: layers/meta-qbee
+    layers:
+      meta-qbee:
+  # This repository (no url/path)
+  demo-device:
+    layers:
+      kas/meta-qbee-demo:
+
+local_conf_header:
+  distro: |
+    DISTRO_FEATURES:append = " rauc"
+    EXTRA_IMAGE_FEATURES += "allow-empty-password allow-root-login empty-root-password"
+    EXTRA_IMAGE_FEATURES += "ssh-server-openssh"
+  meta-qbee: |
+    IMAGE_INSTALL:append = " qbee-agent"
+  shared-dirs: |
+    BB_HASHSERVE_DB_DIR = "${SSTATE_DIR}"
+    INHERIT += "rm_work"
+  rauc_configuration: |
+    IMAGE_INSTALL:append = " rauc"
+    IMAGE_FSTYPES = "wic ext4"
+    RAUC_SLOT_rootfs[fstype] = "ext4"
+    RAUC_SLOT_rootfs[adaptive] = "block-hash-index"
+    RAUC_BUNDLE_VERSION = "1.0"
+    RAUC_BUNDLE_DESCRIPTION = "Version 1.0"
+
+    # DISTRO_CHANGELOG_PATH = "${TOPDIR}/../meta-container-os/files/changelog.txt"
+    # INHERIT += "rauc-distro-meta"
+
+    RAUC_META_release_info[ticket] = "NOJIRA-test-ticket"
+    RAUC_META_release_info[author] = "qbee.io"
+    IMAGE_ROOTFS_ALIGNMENT = "4"
+    # Must match --fixed-size of root_a/root_b in the .wks files (250M = 256000 KiB).
+    # core-image-minimal appends "+ 4096" to IMAGE_ROOTFS_EXTRA_SPACE for systemd, so subtract it.
+    IMAGE_ROOTFS_SIZE = "${@256000 - eval(d.getVar('IMAGE_ROOTFS_EXTRA_SPACE'))}"
+    IMAGE_ROOTFS_MAXSIZE = "256000"
+    IMAGE_ROOTFS_EXTRA_SPACE = "0"
+    IMAGE_OVERHEAD_FACTOR = "1.0"
+    # ext4 block size should be set to 4K and use a fixed directory hash seed to
+    # reduce the image delta size (keep oe-core's 4K bytes-per-inode)
+    # Keep in sync with --mkfs-extraopts for root_a in the .wks files
+    EXTRA_IMAGECMD:ext4 = "-i 4096 -b 4096 -E hash_seed=86ca73ff-7379-40bd-a098-fcb03a6e719d"

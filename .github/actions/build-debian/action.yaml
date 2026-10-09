@@ -1,0 +1,69 @@
+name: Build Debian demo image
+description: Build the Debian demo device image for a given architecture and push it to Docker Hub
+
+inputs:
+  arch:
+    description: Target architecture (amd64 or arm64)
+    required: true
+  qemu-package:
+    description: QEMU system package to install (e.g. qemu-system-x86, qemu-system-arm)
+    required: true
+  docker-username:
+    description: Docker Hub username
+    required: true
+  docker-password:
+    description: Docker Hub password
+    required: true
+
+outputs:
+  release:
+    description: Latest qbee-agent release used for the build
+    value: ${{ steps.get-latest-release.outputs.release }}
+
+runs:
+  using: composite
+  steps:
+    - id: get-latest-release
+      name: Get latest qbee-agent release
+      uses: pozetroninc/github-action-get-latest-release@master
+      with:
+        repository: qbee-io/qbee-agent
+        excludes: prelease,draft
+
+    - name: Install dependencies
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils ${{ inputs.qemu-package }} gettext-base
+
+    - name: Change permissions of /dev/kvm
+      shell: bash
+      run: |
+        if [ ! -c /dev/kvm ]; then
+          echo "/dev/kvm does not exist, skipping permission change"
+          exit 0
+        fi
+        sudo chmod 666 /dev/kvm
+
+    - name: Run build script
+      shell: bash
+      run: |
+        echo "Latest qbee-agent release: ${{ steps.get-latest-release.outputs.release }}"
+        export QBEE_AGENT_VERSION="${{ steps.get-latest-release.outputs.release }}"
+        bash debian/docker-build.sh ${{ inputs.arch }}
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.docker-username }}
+        password: ${{ inputs.docker-password }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+      with:
+        context: ./debian/files
+        file: ./debian/Dockerfile.${{ inputs.arch }}
+        push: true
+        tags: |
+          qbeeio/qbee-demo:latest-${{ inputs.arch }}
+          qbeeio/qbee-demo:latest-debian-${{ inputs.arch }}
+          qbeeio/qbee-demo:${{ steps.get-latest-release.outputs.release }}-debian-${{ inputs.arch }}
+        platforms: linux/${{ inputs.arch }}
