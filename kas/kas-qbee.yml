@@ -6,6 +6,8 @@ distro: nodistro
 # Passed through from the host environment to bitbake
 env:
   QBEE_BOOTSTRAP_KEY: ""
+  # RAUC signing key (set by CI from a secret); when unset, layer.conf default is used
+  RAUC_KEY_FILE:
 
 repos:
   bitbake:

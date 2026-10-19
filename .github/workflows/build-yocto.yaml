@@ -32,6 +32,15 @@ jobs:
           clean: true
           fetch-depth: 0
 
+      - name: Install RAUC signing key
+        env:
+          RAUC_SIGNING_KEY: ${{ secrets.RAUC_SIGNING_KEY }}
+        run: |
+          set -eu
+          key="$RUNNER_TEMP/rauc-signing.key.pem"
+          (umask 077 && printf '%s\n' "$RAUC_SIGNING_KEY" > "$key")
+          echo "RAUC_KEY_FILE=$key" >> "$GITHUB_ENV"
+
       - name: clean target state
         run: | 
           kas shell -c "bitbake -fc do_cleansstate core-image-minimal qbee-agent" kas/kas-qbee-${{ matrix.arch }}.yml
@@ -87,6 +96,10 @@ jobs:
           name: build-artifacts-extra-${{ matrix.arch }}
           path: artifacts/${{ matrix.arch }}
           if-no-files-found: error
+
+      - name: Remove RAUC signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/rauc-signing.key.pem"
 
   docker:
     needs: build
