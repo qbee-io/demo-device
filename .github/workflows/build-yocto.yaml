@@ -87,3 +87,79 @@ jobs:
           name: build-artifacts-extra-${{ matrix.arch }}
           path: artifacts/${{ matrix.arch }}
           if-no-files-found: error
+
+  # Set the repository variable PUSH_DOCKER_IMAGE=true to push to Docker Hub
+  docker:
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            yocto-arch: x86-64
+            runner: ubuntu-latest
+          - arch: arm64
+            yocto-arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.yocto-arch }}
+          path: artifacts
+
+      - name: Stage images for Docker build
+        run: |
+          set -eu
+          rm -rf wic/images && mkdir -p wic/images
+          case "${{ matrix.arch }}" in
+            amd64)
+              mv artifacts/core-image-minimal-qemux86-64.rootfs.wic wic/images/vmimage.wic
+              mv artifacts/ovmf.qcow2 wic/images/ ;;
+            arm64)
+              mv artifacts/core-image-minimal-qemuarm64.rootfs.wic wic/images/vmimage.wic
+              mv artifacts/bootenv.img artifacts/u-boot.bin wic/images/ ;;
+          esac
+          ls -l wic/images
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: vars.PUSH_DOCKER_IMAGE == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./wic
+          file: ./wic/Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          push: ${{ vars.PUSH_DOCKER_IMAGE == 'true' }}
+          load: ${{ vars.PUSH_DOCKER_IMAGE != 'true' }}
+          tags: qbeeio/qbee-demo-yocto:latest-${{ matrix.arch }}
+
+  docker-manifest:
+    needs: docker
+    if: vars.PUSH_DOCKER_IMAGE == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Create and push multi-arch manifest
+        run: |
+          docker buildx imagetools create -t qbeeio/qbee-demo-yocto:latest \
+            qbeeio/qbee-demo-yocto:latest-amd64 \
+            qbeeio/qbee-demo-yocto:latest-arm64
