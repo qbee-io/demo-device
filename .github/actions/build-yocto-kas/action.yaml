@@ -34,28 +34,7 @@ runs:
       shell: bash
       env:
         BUNDLE_ONLY: "false"
-      run: &collect |
-        set -eu
-        deploy=/ci/demo-device/${{ inputs.arch }}/tmp/deploy/images/qemu${{ inputs.arch }}
-        out=artifacts/${{ inputs.arch }}
-        rm -rf "$out" && mkdir -p "$out"
-        bundle="qemu-demo-bundle-qemu${{ inputs.arch }}.raucb"
-        case "${{ inputs.arch }}" in
-          arm64)
-            images="core-image-minimal-qemuarm64.rootfs.wic bootenv.img u-boot.bin" ;;
-          x86-64)
-            images="core-image-minimal-qemux86-64.rootfs.wic ovmf.qcow2" ;;
-        esac
-        # -L dereferences the deploy dir symlinks
-        if [ "$BUNDLE_ONLY" = "true" ]; then
-          # e.g. qemu-demo-bundle-qemux86-64.raucb -> qemu-demo-bundle-nano-qemux86-64.raucb
-          cp -L "$deploy/$bundle" "$out/${bundle%-qemu*}-nano-qemu${bundle##*-qemu}"
-        else
-          for f in $bundle $images; do
-            cp -L "$deploy/$f" "$out/"
-          done
-        fi
-        ls -l "$out"
+      run: bash "$GITHUB_ACTION_PATH/collect.sh" "${{ inputs.arch }}"
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -72,7 +51,7 @@ runs:
       shell: bash
       env:
         BUNDLE_ONLY: "true"
-      run: *collect
+      run: bash "$GITHUB_ACTION_PATH/collect.sh" "${{ inputs.arch }}"
 
     - name: Upload build artifacts for the second build
       uses: actions/upload-artifact@v4
