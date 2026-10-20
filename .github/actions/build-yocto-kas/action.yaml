@@ -1,0 +1,87 @@
+name: Build Yocto demo image (kas)
+description: Build the Yocto demo device image for a given architecture using kas and upload the build artifacts
+
+inputs:
+  arch:
+    description: kas/Yocto architecture (x86-64 or arm64)
+    required: true
+  rauc-signing-key:
+    description: RAUC signing key (PEM)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install RAUC signing key
+      shell: bash
+      run: |
+        set -eu
+        key="$RUNNER_TEMP/rauc-signing.key.pem"
+        (umask 077 && printf '%s\n' "${{ inputs.rauc-signing-key }}" > "$key")
+        echo "RAUC_KEY_FILE=$key" >> "$GITHUB_ENV"
+
+    - name: clean target state
+      shell: bash
+      run: |
+        kas shell -c "bitbake -fc do_cleansstate core-image-minimal qbee-agent" kas/kas-qbee-${{ inputs.arch }}.yml
+        kas shell -c "bitbake -fc clean core-image-minimal qbee-agent" kas/kas-qbee-${{ inputs.arch }}.yml
+
+    - name: Run kas for ${{ inputs.arch }}
+      shell: bash
+      run: kas build kas/kas-qbee-${{ inputs.arch }}.yml
+
+    - name: Collect build artifacts
+      shell: bash
+      env:
+        BUNDLE_ONLY: "false"
+      run: &collect |
+        set -eu
+        deploy=/ci/demo-device/${{ inputs.arch }}/tmp/deploy/images/qemu${{ inputs.arch }}
+        out=artifacts/${{ inputs.arch }}
+        rm -rf "$out" && mkdir -p "$out"
+        bundle="qemu-demo-bundle-qemu${{ inputs.arch }}.raucb"
+        case "${{ inputs.arch }}" in
+          arm64)
+            images="core-image-minimal-qemuarm64.rootfs.wic bootenv.img u-boot.bin" ;;
+          x86-64)
+            images="core-image-minimal-qemux86-64.rootfs.wic ovmf.qcow2" ;;
+        esac
+        # -L dereferences the deploy dir symlinks
+        if [ "$BUNDLE_ONLY" = "true" ]; then
+          # e.g. qemu-demo-bundle-qemux86-64.raucb -> qemu-demo-bundle-nano-qemux86-64.raucb
+          cp -L "$deploy/$bundle" "$out/${bundle%-qemu*}-nano-qemu${bundle##*-qemu}"
+        else
+          for f in $bundle $images; do
+            cp -L "$deploy/$f" "$out/"
+          done
+        fi
+        ls -l "$out"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts-${{ inputs.arch }}
+        path: artifacts/${{ inputs.arch }}
+        if-no-files-found: error
+
+    - name: Run kas for ${{ inputs.arch }} again with extra package
+      shell: bash
+      run: kas build kas/kas-qbee-${{ inputs.arch }}.yml:kas/kas-qbee-nano.yml
+
+    - name: Collect build artifacts for the second build
+      shell: bash
+      env:
+        BUNDLE_ONLY: "true"
+      run: *collect
+
+    - name: Upload build artifacts for the second build
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts-extra-${{ inputs.arch }}
+        path: artifacts/${{ inputs.arch }}
+        if-no-files-found: error
+
+    - name: Remove RAUC signing key
+      if: always()
+      shell: bash
+      run: rm -f "$RUNNER_TEMP/rauc-signing.key.pem"
