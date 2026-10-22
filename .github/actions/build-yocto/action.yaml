@@ -8,17 +8,15 @@ inputs:
   yocto-arch:
     description: Yocto/kas architecture (x86-64 or arm64)
     required: true
+  release:
+    description: qbee-agent release used to tag the image
+    required: true
   docker-username:
     description: Docker Hub username
     required: true
   docker-password:
     description: Docker Hub password
     required: true
-
-outputs:
-  release:
-    description: Latest qbee-agent release used for the build
-    value: ${{ steps.get-latest-release.outputs.release }}
 
 runs:
   using: composite
@@ -47,13 +45,6 @@ runs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - id: get-latest-release
-      name: Get latest qbee-agent release
-      uses: pozetroninc/github-action-get-latest-release@master
-      with:
-        repository: qbee-io/qbee-agent
-        excludes: prelease,draft
-
     - name: Log in to Docker Hub
       uses: docker/login-action@v3
       with:
@@ -69,4 +60,4 @@ runs:
         push: true
         tags: |
           qbeeio/qbee-demo:latest-yocto-${{ inputs.arch }}
-          qbeeio/qbee-demo:${{ steps.get-latest-release.outputs.release }}-yocto-${{ inputs.arch }}
+          qbeeio/qbee-demo:${{ inputs.release }}-yocto-${{ inputs.arch }}

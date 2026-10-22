@@ -8,6 +8,9 @@ inputs:
   qemu-package:
     description: QEMU system package to install (e.g. qemu-system-x86, qemu-system-arm)
     required: true
+  release:
+    description: qbee-agent release to build with and tag the image
+    required: true
   docker-username:
     description: Docker Hub username
     required: true
@@ -15,21 +18,9 @@ inputs:
     description: Docker Hub password
     required: true
 
-outputs:
-  release:
-    description: Latest qbee-agent release used for the build
-    value: ${{ steps.get-latest-release.outputs.release }}
-
 runs:
   using: composite
   steps:
-    - id: get-latest-release
-      name: Get latest qbee-agent release
-      uses: pozetroninc/github-action-get-latest-release@master
-      with:
-        repository: qbee-io/qbee-agent
-        excludes: prelease,draft
-
     - name: Install dependencies
       shell: bash
       run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils ${{ inputs.qemu-package }} gettext-base
@@ -45,9 +36,10 @@ runs:
 
     - name: Run build script
       shell: bash
+      env:
+        QBEE_AGENT_VERSION: ${{ inputs.release }}
       run: |
-        echo "Latest qbee-agent release: ${{ steps.get-latest-release.outputs.release }}"
-        export QBEE_AGENT_VERSION="${{ steps.get-latest-release.outputs.release }}"
+        echo "qbee-agent release: $QBEE_AGENT_VERSION"
         bash debian/docker-build.sh ${{ inputs.arch }}
 
     - name: Log in to Docker Hub
@@ -65,5 +57,5 @@ runs:
         tags: |
           qbeeio/qbee-demo:latest-${{ inputs.arch }}
           qbeeio/qbee-demo:latest-debian-${{ inputs.arch }}
-          qbeeio/qbee-demo:${{ steps.get-latest-release.outputs.release }}-debian-${{ inputs.arch }}
+          qbeeio/qbee-demo:${{ inputs.release }}-debian-${{ inputs.arch }}
         platforms: linux/${{ inputs.arch }}
