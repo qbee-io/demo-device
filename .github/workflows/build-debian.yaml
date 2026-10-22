@@ -1,7 +1,10 @@
-name: CI
+name: CI Debian
 
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build-amd64:
