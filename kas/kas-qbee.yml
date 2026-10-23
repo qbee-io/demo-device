@@ -38,10 +38,14 @@ repos:
 local_conf_header:
   distro: |
     DISTRO_FEATURES:append = " rauc"
-    EXTRA_IMAGE_FEATURES += "allow-empty-password allow-root-login empty-root-password"
-    EXTRA_IMAGE_FEATURES += "ssh-server-openssh"
+    DISTRO_NAME = "Qbee Demo"
+    DISTRO_CODENAME = "${LAYERSERIES_CORENAMES}"
+    PRETTY_NAME:pn-os-release = "${DISTRO_NAME} (${DISTRO_CODENAME})"
+
+
   meta-qbee: |
     IMAGE_INSTALL:append = " qbee-agent"
+
   shared-dirs: |
     BB_HASHSERVE_DB_DIR = "${SSTATE_DIR}"
     INHERIT += "rm_work"
