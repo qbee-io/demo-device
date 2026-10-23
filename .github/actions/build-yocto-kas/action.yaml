@@ -37,7 +37,7 @@ runs:
       run: bash "$GITHUB_ACTION_PATH/collect.sh" "${{ inputs.arch }}"
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: build-artifacts-${{ inputs.arch }}
         path: artifacts/${{ inputs.arch }}
@@ -54,7 +54,7 @@ runs:
       run: bash "$GITHUB_ACTION_PATH/collect.sh" "${{ inputs.arch }}"
 
     - name: Upload build artifacts for the second build
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: build-artifacts-extra-${{ inputs.arch }}
         path: artifacts/${{ inputs.arch }}
