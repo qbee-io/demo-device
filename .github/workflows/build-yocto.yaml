@@ -1,0 +1,132 @@
+permissions:
+  contents: read
+name: CI Yocto
+on:
+    pull_request:
+    workflow_dispatch:
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.get-latest-release.outputs.release }}
+    steps:
+      - id: get-latest-release
+        name: Get latest qbee-agent release
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          repository: qbee-io/qbee-agent
+          excludes: prelease,draft
+
+  build:
+    strategy:
+      matrix:
+        arch: [x86-64,arm64]
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 600
+    container:
+      image: ghcr.io/siemens/kas/kas:5.0-debian-bookworm
+      options: --user 1000:1000
+      env:
+        KAS_CLONE_DEPTH: 0
+        DL_DIR: /ci/demo-device/downloads
+        SSTATE_DIR: /ci/demo-device/${{ matrix.arch }}/sstate
+        TMPDIR: /ci/demo-device/${{ matrix.arch }}/tmp
+        # Environment variable for bootstrap key
+        # set it to empty for testing purposes
+        QBEE_BOOTSTRAP_KEY:
+      volumes:
+        - /home/runner/ci/demo-device:/ci/demo-device
+        - /etc/passwd:/etc/passwd:ro
+        - /etc/group:/etc/group:ro
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          clean: true
+          fetch-depth: 0
+
+      - name: Build Yocto image for ${{ matrix.arch }}
+        uses: ./.github/actions/build-yocto-kas
+        with:
+          arch: ${{ matrix.arch }}
+          rauc-signing-key: ${{ secrets.RAUC_SIGNING_KEY }}
+
+  docker:
+    needs: [build, version]
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            yocto-arch: x86-64
+            runner: ubuntu-latest
+          - arch: arm64
+            yocto-arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build and push image
+        uses: ./.github/actions/build-yocto
+        with:
+          arch: ${{ matrix.arch }}
+          yocto-arch: ${{ matrix.yocto-arch }}
+          release: ${{ needs.version.outputs.release }}
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
+
+  docker-manifest:
+    needs: [docker, version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Create and push multi-arch manifest
+        env:
+          LATEST_RELEASE: ${{ needs.version.outputs.release }}
+        run: |
+          docker buildx imagetools create -t qbeeio/qbee-demo:latest-yocto \
+            qbeeio/qbee-demo:latest-yocto-amd64 \
+            qbeeio/qbee-demo:latest-yocto-arm64
+
+          docker buildx imagetools create -t qbeeio/qbee-demo:${LATEST_RELEASE}-yocto \
+            qbeeio/qbee-demo:${LATEST_RELEASE}-yocto-amd64 \
+            qbeeio/qbee-demo:${LATEST_RELEASE}-yocto-arm64
+
+  release:
+    needs: [build, version]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: build-artifacts-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Publish RAUC bundles to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.version.outputs.release }}
+        run: |
+          set -eu
+          ls -l artifacts/*.raucb
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" artifacts/*.raucb --clobber
+          else
+            gh release create "$TAG" artifacts/*.raucb \
+              --target "$GITHUB_SHA" \
+              --title "$TAG" \
+              --notes "RAUC bundles built with qbee-agent $TAG"
+          fi

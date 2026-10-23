@@ -1,0 +1,25 @@
+header:
+  version: 14
+  includes:
+    - kas/kas-qbee.yml
+
+machine: qemux86-64
+
+defaults:
+  repos:
+    branch: wrynose
+
+repos:
+  meta-qbee:
+    branch: wrynose
+  bitbake:
+    branch: "2.18"
+
+target:
+  - core-image-minimal
+  - qemu-demo-bundle
+
+local_conf_header:
+  machine: |
+    EXTRA_IMAGEDEPENDS += "ovmf"
+    PREFERRED_RPROVIDER_virtual-grub-bootconf = "rauc-qemu-grubconf"
