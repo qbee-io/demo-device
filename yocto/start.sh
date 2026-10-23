@@ -16,7 +16,7 @@ MAC=$(echo "$HOSTNAME" | md5sum | sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\
 
 # Defaults
 QBEE_DEMO_DEVICE_HUB_HOST=${QBEE_DEMO_DEVICE_HUB_HOST:-device.app.qbee.io}
-QBEE_DEMO_DEVICE_NAME_TYPE=${QBEE_DEMO_DEVICE_NAME_TYPE:-mac-address}
+QBEE_DEMO_DEVICE_NAME_TYPE=${QBEE_DEMO_DEVICE_NAME_TYPE:-hostname}
 
 # Generate the bootstrap-env file for this device
 cat > /run/.bootstrap-env << EOF
@@ -25,8 +25,6 @@ DEVICE_NAME_TYPE=${QBEE_DEMO_DEVICE_NAME_TYPE}
 DEVICE_HUB_HOST=${QBEE_DEMO_DEVICE_HUB_HOST}
 CLEAN_SEEDING_INFO=true
 EOF
-
-
 
 start_x86_64() {
   qemu-system-x86_64 \
