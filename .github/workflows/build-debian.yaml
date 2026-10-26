@@ -2,6 +2,7 @@ name: CI Debian
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read

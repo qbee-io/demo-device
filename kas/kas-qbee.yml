@@ -42,9 +42,8 @@ local_conf_header:
     DISTRO_CODENAME = "${LAYERSERIES_CORENAMES}"
     PRETTY_NAME:pn-os-release = "${DISTRO_NAME} (${DISTRO_CODENAME})"
 
-
   meta-qbee: |
-    IMAGE_INSTALL:append = " qbee-agent"
+    IMAGE_INSTALL:append = " qbee-ag:qent"
 
   shared-dirs: |
     BB_HASHSERVE_DB_DIR = "${SSTATE_DIR}"
