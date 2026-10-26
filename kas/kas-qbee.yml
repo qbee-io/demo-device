@@ -43,7 +43,7 @@ local_conf_header:
     PRETTY_NAME:pn-os-release = "${DISTRO_NAME} (${DISTRO_CODENAME})"
 
   meta-qbee: |
-    IMAGE_INSTALL:append = " qbee-ag:qent"
+    IMAGE_INSTALL:append = " qbee-agent"
 
   shared-dirs: |
     BB_HASHSERVE_DB_DIR = "${SSTATE_DIR}"
