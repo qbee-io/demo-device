@@ -44,6 +44,7 @@ local_conf_header:
 
   meta-qbee: |
     IMAGE_INSTALL:append = " qbee-agent"
+    QBEE_AUTO_INSTALL = '0'
 
   shared-dirs: |
     BB_HASHSERVE_DB_DIR = "${SSTATE_DIR}"
