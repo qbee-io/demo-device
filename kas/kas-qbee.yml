@@ -38,7 +38,7 @@ repos:
 local_conf_header:
   distro: |
     DISTRO_FEATURES:append = " rauc"
-    DISTRO_NAME = "Qbee Demo"
+    DISTRO_NAME = "Qbee Yocto demo"
     DISTRO_CODENAME = "${LAYERSERIES_CORENAMES}"
     PRETTY_NAME:pn-os-release = "${DISTRO_NAME} (${DISTRO_CODENAME})"
 
