@@ -1,0 +1,19 @@
+name: CI All
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debian:
+    uses: ./.github/workflows/build-debian.yaml
+    secrets: inherit
+
+  yocto:
+    uses: ./.github/workflows/build-yocto.yaml
+    secrets: inherit
+    permissions:
+      # Required by the release job in build-yocto.yaml
+      contents: write
