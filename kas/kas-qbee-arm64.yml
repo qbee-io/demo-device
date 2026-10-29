@@ -1,0 +1,26 @@
+header:
+  version: 14
+  includes:
+    - kas/kas-qbee.yml
+
+machine: qemuarm64
+
+defaults:
+  repos:
+    branch: wrynose
+
+repos:
+  meta-qbee:
+    branch: wrynose
+  bitbake:
+    branch: "2.18"
+
+target:
+  - core-image-minimal
+  - qemu-demo-bundle
+
+local_conf_header:
+  machine: |
+    PREFERRED_PROVIDER_virtual/bootloader = "u-boot"
+    PREFERRED_RPROVIDER_u-boot-default-env = "libubootenv"
+    INIT_MANAGER = "systemd"
