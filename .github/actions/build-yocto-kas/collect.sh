@@ -5,11 +5,12 @@ arch="$1"
 deploy=/ci/demo-device/$arch/tmp/deploy/images/qemu$arch
 out=artifacts/$arch
 rm -rf "$out" && mkdir -p "$out"
-bundle="qemu-demo-bundle-qemu$arch.raucb"
 case "$arch" in
   arm64)
+    bundle="update-bundle-qemuarm64.raucb"
     images="core-image-minimal-qemuarm64.rootfs.wic bootenv.img u-boot.bin" ;;
   x86-64)
+    bundle="qemu-demo-bundle-qemux86-64.raucb"
     images="core-image-minimal-qemux86-64.rootfs.wic ovmf.qcow2" ;;
 esac
 # -L dereferences the deploy dir symlinks

@@ -1,1 +1,0 @@
-include ${BPN}-${MACHINE}.inc

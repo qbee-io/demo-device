@@ -1,14 +1,4 @@
-IMAGE_INSTALL:append = " \
-    u-boot-fw-utils \
-    u-boot-default-env \
-    kernel-image \
-    devicetree-qemuarm \
-    mtd-utils \
-"
+# meta-rauc-qemuarm sets "tar.bz2 wic.qcow2"; the raw wic and ext4 (adaptive updates) are needed
+IMAGE_FSTYPES = "wic ext4"
 
-# Deploy the bootscript to the boot partition via the bootimg-partition plugin
-IMAGE_BOOT_FILES = "boot.scr"
-
-WKS_FILE = "qemuarm64.wks"
-
-do_image_wic[depends] += "u-boot:do_deploy"
+WKS_FILE:qemuarm64 = "qemuarm64.wks"
