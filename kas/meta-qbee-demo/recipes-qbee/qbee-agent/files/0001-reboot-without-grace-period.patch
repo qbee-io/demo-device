@@ -1,0 +1,27 @@
+From 918dc83468d679268dfad746bcda41385dc0c670 Mon Sep 17 00:00:00 2001
+From: "qbee.io" <support@qbee.io>
+Date: Fri, 23 Oct 2026 10:45:52 +0200
+Subject: [PATCH] utils: reboot immediately instead of after 1 minute grace
+ period
+
+Use 'shutdown -r now' instead of 'shutdown -r +1' so that reboots
+triggered by the agent happen without the 1 minute delay.
+
+Upstream-Status: Inappropriate [demo-device specific]
+---
+ app/utils/commands.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/app/utils/commands.go b/app/utils/commands.go
+index bbc73eb..1b8b930 100644
+--- a/app/utils/commands.go
++++ b/app/utils/commands.go
+@@ -185,7 +185,7 @@ const rebootBinPath = "/sbin/reboot"
+ // RebootCommand returns the command to reboot the system
+ func RebootCommand() ([]string, error) {
+ 	if _, err := exec.LookPath(shutdownBinPath); err == nil {
+-		return []string{shutdownBinPath, "-r", "+1"}, nil
++		return []string{shutdownBinPath, "-r", "now"}, nil
+ 	}
+ 
+ 	if _, err := exec.LookPath(rebootBinPath); err == nil {
