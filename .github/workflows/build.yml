@@ -1,0 +1,13 @@
+name: CI All
+
+on:
+  workflow_dispatch:
+  pull_request:
+    
+permissions:
+  contents: read
+
+jobs:
+  debian:
+    uses: ./.github/workflows/build-debian.yaml
+    secrets: inherit
