@@ -94,14 +94,14 @@ if [[ "$GUEST_ARCH" == "amd64" ]]; then
   wic cp /run/.bootstrap-env "$IMAGE":4/etc/qbee/yocto/
   clear
   start_x86_64
-  exit 0
+  exit $?
 elif [[ "$GUEST_ARCH" == "arm64" ]]; then
   # First root partition is on partition 2 for arm64 guests
   wic cp /run/.bootstrap-env "$IMAGE":2/etc/qbee/yocto/
   # u-boot doesn't clear the screen like grub does, so clear it ourselves
   clear
   start_aarch64
-  exit 0
+  exit $?
 else
   echo "Unsupported guest architecture: $GUEST_ARCH" >&2
   exit 1
