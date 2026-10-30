@@ -20,7 +20,7 @@ qbee_demo_sudoers() {
 ROOTFS_POSTPROCESS_COMMAND += "qbee_demo_os_release_version;"
 qbee_demo_os_release_version() {
     local qbee_agent_version os_release
-    qbee_agent_version="$(oe-pkgdata-util read-value PKGV qbee-agent)"
+    qbee_agent_version="$(oe-pkgdata-util -p ${PKGDATA_DIR} read-value PKGV qbee-agent)"
     os_release="${IMAGE_ROOTFS}${nonarch_libdir}/os-release"
     sed -i \
         -e "s/^VERSION_ID=.*/VERSION_ID=${qbee_agent_version}/" \
