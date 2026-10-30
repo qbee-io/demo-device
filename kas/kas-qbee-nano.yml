@@ -3,7 +3,7 @@ header:
 
 # Overlay on top of an arch config, e.g.:
 #   kas build kas-qbee-x86-64.yml:kas-qbee-nano.yml
-#   kas build kas-qbee-arm.yml:kas-qbee-nano.yml
+#   kas build kas build kas-qbee-arm64.yml:kas-qbee-nano.yml
 
 repos:
   # nano lives in meta-oe; branch follows the arch config's defaults
