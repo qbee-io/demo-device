@@ -13,12 +13,13 @@ case "$arch" in
     bundle="qemu-demo-bundle-qemux86-64.raucb"
     images="core-image-minimal-qemux86-64.rootfs.wic ovmf.qcow2" ;;
 esac
+machine="qemu${bundle##*-qemu}"
 # -L dereferences the deploy dir symlinks
 if [ "${BUNDLE_ONLY:-false}" = "true" ]; then
-  # e.g. qemu-demo-bundle-qemux86-64.raucb -> qemu-demo-bundle-nano-qemux86-64.raucb
-  cp -L "$deploy/$bundle" "$out/${bundle%-qemu*}-nano-qemu${bundle##*-qemu}"
+  cp -L "$deploy/$bundle" "$out/qbee-demo-bundle-nano-$machine"
 else
-  for f in $bundle $images; do
+  cp -L "$deploy/$bundle" "$out/qbee-demo-bundle-$machine"
+  for f in $images; do
     cp -L "$deploy/$f" "$out/"
   done
 fi
