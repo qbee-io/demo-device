@@ -13,12 +13,15 @@ jobs:
     outputs:
       release: ${{ steps.get-latest-release.outputs.release }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
       - id: get-latest-release
         name: Get latest qbee-agent release
-        uses: pozetroninc/github-action-get-latest-release@master
+        uses: ./.github/actions/get-latest-release
         with:
           repository: qbee-io/qbee-agent
-          excludes: prelease,draft
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   build:
     strategy:
@@ -34,9 +37,6 @@ jobs:
         DL_DIR: /ci/demo-device/downloads
         SSTATE_DIR: /ci/demo-device/${{ matrix.arch }}/sstate
         TMPDIR: /ci/demo-device/${{ matrix.arch }}/tmp
-        # Environment variable for bootstrap key
-        # set it to empty for testing purposes
-        QBEE_BOOTSTRAP_KEY:
       volumes:
         - /home/runner/ci/demo-device:/ci/demo-device
         - /etc/passwd:/etc/passwd:ro
