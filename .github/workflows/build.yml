@@ -7,9 +7,9 @@ permissions:
   contents: read
 
 jobs:
-  # debian:
-  #   uses: ./.github/workflows/build-debian.yaml
-  #   secrets: inherit
+  debian:
+    uses: ./.github/workflows/build-debian.yaml
+    secrets: inherit
 
   yocto:
     uses: ./.github/workflows/build-yocto.yaml
