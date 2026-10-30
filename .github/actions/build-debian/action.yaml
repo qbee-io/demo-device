@@ -1,0 +1,61 @@
+name: Build Debian demo image
+description: Build the Debian demo device image for a given architecture and push it to Docker Hub
+
+inputs:
+  arch:
+    description: Target architecture (amd64 or arm64)
+    required: true
+  qemu-package:
+    description: QEMU system package to install (e.g. qemu-system-x86, qemu-system-arm)
+    required: true
+  release:
+    description: qbee-agent release to build with and tag the image
+    required: true
+  docker-username:
+    description: Docker Hub username
+    required: true
+  docker-password:
+    description: Docker Hub password
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y cloud-image-utils qemu-utils ${{ inputs.qemu-package }} gettext-base
+
+    - name: Change permissions of /dev/kvm
+      shell: bash
+      run: |
+        if [ ! -c /dev/kvm ]; then
+          echo "/dev/kvm does not exist, skipping permission change"
+          exit 0
+        fi
+        sudo chmod 666 /dev/kvm
+
+    - name: Run build script
+      shell: bash
+      env:
+        QBEE_AGENT_VERSION: ${{ inputs.release }}
+      run: |
+        echo "qbee-agent release: $QBEE_AGENT_VERSION"
+        bash debian/docker-build.sh ${{ inputs.arch }}
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v4
+      with:
+        username: ${{ inputs.docker-username }}
+        password: ${{ inputs.docker-password }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      with:
+        context: ./debian/files
+        file: ./debian/Dockerfile.${{ inputs.arch }}
+        push: true
+        tags: |
+          qbeeio/qbee-demo:latest-${{ inputs.arch }}
+          qbeeio/qbee-demo:latest-debian-${{ inputs.arch }}
+          qbeeio/qbee-demo:${{ inputs.release }}-debian-${{ inputs.arch }}
+        platforms: linux/${{ inputs.arch }}
