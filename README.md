@@ -46,10 +46,9 @@ set it on a device/group's **RAUC** configuration page.
 1. **Download the bundle from GitHub**
 
    ```bash
-   gh release download <tag> --repo qbee-io/demo-device --pattern 'qbee-demo-bundle-qemux86-64.raucb'
-   # or, without the gh CLI:
-   curl -L -o qbee-demo-bundle-qemux86-64.raucb \
-     https://github.com/qbee-io/demo-device/releases/latest/download/qbee-demo-bundle-qemux86-64.raucb
+   wget https://github.com/qbee-io/demo-device/releases/latest/download/qbee-demo-bundle-qemux86-64.raucb
+   # or, with curl:
+   curl -LO https://github.com/qbee-io/demo-device/releases/latest/download/qbee-demo-bundle-qemux86-64.raucb
    ```
 
 2. **Log in and upload the bundle to the qbee.io filemanager**
