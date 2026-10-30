@@ -1,0 +1,34 @@
+header:
+  version: 14
+  includes:
+    - kas/kas-qbee.yml
+
+machine: qemuarm64
+
+defaults:
+  repos:
+    branch: wrynose
+
+repos:
+  meta-qbee:
+    branch: wrynose
+  bitbake:
+    branch: "2.18"
+  meta-rauc-community:
+    url: "https://github.com/rauc/meta-rauc-community.git"
+    path: layers/meta-rauc-community
+    # no wrynose branch yet; master is wrynose-compatible at this commit
+    branch: master
+    commit: 4d666ae4956f1cfacbd1a844f2e1794cb7784e2a
+    layers:
+      meta-rauc-qemuarm:
+
+target:
+  - core-image-minimal
+  - update-bundle
+
+local_conf_header:
+  machine: |
+    PREFERRED_PROVIDER_virtual/bootloader = "u-boot"
+    PREFERRED_RPROVIDER_u-boot-default-env = "libubootenv"
+    INIT_MANAGER = "systemd"
