@@ -18,7 +18,7 @@ jobs:
         uses: pozetroninc/github-action-get-latest-release@master
         with:
           repository: qbee-io/qbee-agent
-          excludes: prelease,draft
+          excludes: prerelease,draft
 
   docker:
     needs: version
