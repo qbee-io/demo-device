@@ -43,42 +43,83 @@ instead of building Yocto yourself. The same two steps (file upload, configurati
 done through the qbee web UI instead of the CLI: upload the bundle under **File manager**, then
 set it on a device/group's **RAUC** configuration page.
 
-1. **Download the bundle from GitHub**
+As an example, the `qbee-demo-bundle-nano-qemux86-64.raucb` bundle below installs the `nano` text
+editor into the image via an A/B update — after it's applied and the device reboots into the
+updated partition, `nano` becomes available on the device.
+
+1. **Verify `nano` isn't installed yet**
+
+   Open an interactive terminal session on the device:
 
    ```bash
-   wget https://github.com/qbee-io/demo-device/releases/latest/download/qbee-demo-bundle-qemux86-64.raucb
-   # or, with curl:
-   curl -LO https://github.com/qbee-io/demo-device/releases/latest/download/qbee-demo-bundle-qemux86-64.raucb
+   qbee-cli term <device-id>
    ```
 
-2. **Log in and upload the bundle to the qbee.io filemanager**
+   In that session, run:
+
+   ```bash
+   nano --version
+   ```
+
+   This should report that `nano` is not found, confirming `nano` is absent before the update.
+
+2. **Download the bundle from GitHub**
+
+   ```bash
+   wget https://github.com/qbee-io/demo-device/releases/latest/download/qbee-demo-bundle-nano-qemux86-64.raucb
+   # or, with curl:
+   curl -LO https://github.com/qbee-io/demo-device/releases/latest/download/qbee-demo-bundle-nano-qemux86-64.raucb
+   ```
+
+3. **Log in and upload the bundle to the qbee.io filemanager**
 
    ```bash
    qbee-cli login
 
    qbee-cli files upload \
-     --source qbee-demo-bundle-qemux86-64.raucb \
+     --source qbee-demo-bundle-nano-qemux86-64.raucb \
      --destination /rauc-bundles \
      --overwrite
    ```
 
-3. **Enable the update by saving and committing a RAUC configuration**
+4. **Enable the update by saving and committing a RAUC configuration**
 
    Create a config file for the `rauc` bundle, pointing at the uploaded file's filemanager path:
 
    ```json
    {
      "enabled": true,
-     "rauc_bundle": "/rauc-bundles/qbee-demo-bundle-qemux86-64.raucb"
+     "rauc_bundle": "/rauc-bundles/qbee-demo-bundle-nano-qemux86-64.raucb"
    }
    ```
 
-   Then apply it to a device or group (`--node`) and commit it so it takes effect:
+   Then apply it to the device and commit it so it takes effect:
 
    ```bash
-   qbee-cli config save --config rauc-config.json --bundle rauc --node <device-or-group-id>
-   qbee-cli config commit --commit-message "Deploy qbee-demo-bundle-qemux86-64.raucb"
+   qbee-cli config save --config rauc-config.json --bundle rauc --node <device-id>
+   qbee-cli config commit --commit-message "Deploy qbee-demo-bundle-nano-qemux86-64.raucb"
    ```
 
-   On the next agent check-in, the device installs the bundle to its inactive partition and
-   reboots into it.
+   The device installs the bundle to its inactive partition and reboots into it on the next agent
+   check-in. To trigger this immediately instead of waiting for the next scheduled agent run, 
+   run the agent on the device now:
+
+   ```bash
+   qbee-cli run --device-id <device-id>
+   ```
+
+5. **Verify `nano` is now installed**
+
+   Once the device has rebooted into the updated partition, open a terminal session again:
+
+   ```bash
+   qbee-cli term <device-id>
+   ```
+
+   In that session, run:
+
+   ```bash
+   nano --version
+   ```
+
+   This should now print the installed `nano` version instead of an error.
