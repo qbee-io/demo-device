@@ -13,12 +13,15 @@ jobs:
     outputs:
       release: ${{ steps.get-latest-release.outputs.release }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
       - id: get-latest-release
         name: Get latest qbee-agent release
-        uses: pozetroninc/github-action-get-latest-release@master
+        uses: ./.github/actions/get-latest-release
         with:
           repository: qbee-io/qbee-agent
-          excludes: prerelease,draft
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   docker:
     needs: version
