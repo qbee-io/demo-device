@@ -40,6 +40,8 @@ local_conf_header:
     DISTRO_FEATURES:append = " rauc"
     DISTRO_NAME = "Qbee Yocto demo"
     DISTRO_CODENAME = "${LAYERSERIES_CORENAMES}"
+    # ID must stay shell/spec-safe (lower-case, no spaces); PRETTY_NAME carries the human-readable name
+    ID:pn-os-release = "qbee-yocto-demo"
     PRETTY_NAME:pn-os-release = "${DISTRO_NAME} (${DISTRO_CODENAME})"
 
   meta-qbee: |

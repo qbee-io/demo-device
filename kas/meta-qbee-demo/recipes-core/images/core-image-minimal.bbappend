@@ -14,3 +14,16 @@ qbee_demo_sudoers() {
     echo 'qbee ALL=(ALL) NOPASSWD:ALL' > ${IMAGE_ROOTFS}${sysconfdir}/sudoers.d/qbee
     chmod 0440 ${IMAGE_ROOTFS}${sysconfdir}/sudoers.d/qbee
 }
+
+# os-release is built before qbee-agent's version is known, so stamp the real
+# agent version into VERSION/VERSION_ID here, once qbee-agent's pkgdata exists.
+ROOTFS_POSTPROCESS_COMMAND += "qbee_demo_os_release_version;"
+qbee_demo_os_release_version() {
+    local qbee_agent_version os_release
+    qbee_agent_version="$(oe-pkgdata-util read-value PKGV qbee-agent)"
+    os_release="${IMAGE_ROOTFS}${nonarch_libdir}/os-release"
+    sed -i \
+        -e "s/^VERSION_ID=.*/VERSION_ID=${qbee_agent_version}/" \
+        -e "s/^VERSION=.*/VERSION=\"${qbee_agent_version} (${DISTRO_CODENAME})\"/" \
+        "${os_release}"
+}
