@@ -1,0 +1,26 @@
+name: Get latest release
+description: Get the tag name of the latest non-draft, non-prerelease release for a GitHub repository
+
+inputs:
+  repository:
+    description: GitHub repository to query, in owner/name format
+    required: true
+  github-token:
+    description: Token used to authenticate the gh CLI
+    required: true
+
+outputs:
+  release:
+    description: Tag name of the latest release
+    value: ${{ steps.get-latest-release.outputs.release }}
+
+runs:
+  using: composite
+  steps:
+    - id: get-latest-release
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        release=$(gh api "repos/${{ inputs.repository }}/releases/latest" --jq .tag_name)
+        echo "release=$release" >> "$GITHUB_OUTPUT"
