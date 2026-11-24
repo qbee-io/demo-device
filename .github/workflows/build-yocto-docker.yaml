@@ -60,6 +60,21 @@ jobs:
       - name: Run kas for x86-64 with Docker
         run: kas build "$KAS_CONFIG"
 
+      # The rootfs must fit the fixed 250M root partitions; show what takes the space
+      # (rm_work removes the rootfs after a successful build, so this mostly helps on failure)
+      - name: Rootfs size breakdown
+        if: always()
+        run: |
+          rootfs="$TMPDIR/work/qemux86_64-oe-linux/core-image-minimal/1.0/rootfs"
+          if [ ! -d "$rootfs" ]; then
+            echo "No rootfs left in $rootfs"
+            exit 0
+          fi
+          du -sk "$rootfs"
+          du -xk --max-depth=4 "$rootfs" | sort -n | tail -40
+          echo "Largest files:"
+          find "$rootfs" -xdev -type f -size +1M -exec du -k {} + | sort -n | tail -30
+
       - name: Collect build artifacts
         run: |
           set -eu

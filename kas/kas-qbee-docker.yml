@@ -31,15 +31,19 @@ local_conf_header:
 
     IMAGE_INSTALL:append = " docker-moby docker-compose"
 
+    # meta-rauc-qemux86 installs every kernel module (~45M: GPU, sound, wireless, ...), which
+    # doesn't fit next to Docker in the 250M root partition. Everything the VM itself needs is
+    # built into the kernel; the modules Docker needs are pulled in by docker-moby's RRECOMMENDS.
+    IMAGE_INSTALL:remove = "kernel-modules"
+
     IMAGE_CLASSES += "qbee-demo-upx"
-    # Symlinks (ctr, docker-runc, docker-containerd, ...) point at these and need no handling
+    # Symlinks (docker-runc, docker-containerd, ...) point at these and need no handling
     UPX_COMPRESS_FILES = " \
         ${bindir}/dockerd \
         ${bindir}/docker \
         ${bindir}/docker-proxy \
         ${bindir}/containerd \
         ${bindir}/containerd-shim-runc-v2 \
-        ${bindir}/containerd-ctr \
         ${bindir}/runc \
         ${nonarch_libdir}/docker/cli-plugins/docker-compose \
     "

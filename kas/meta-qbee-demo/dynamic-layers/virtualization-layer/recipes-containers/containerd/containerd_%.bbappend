@@ -8,6 +8,9 @@ SRC_URI += " \
 "
 
 do_install:append() {
+    # ctr is containerd's debug CLI; Docker doesn't use it, so save the space
+    rm -f ${D}${bindir}/containerd-ctr ${D}${bindir}/ctr ${D}${bindir}/docker-containerd-ctr
+
     install -d ${D}${sysconfdir}/containerd
     install -m 0644 ${UNPACKDIR}/config.toml ${D}${sysconfdir}/containerd/config.toml
 
