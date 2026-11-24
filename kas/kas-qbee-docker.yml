@@ -1,0 +1,48 @@
+header:
+  version: 14
+
+# Overlay on top of an arch config that adds Docker (moby) and docker compose, e.g.:
+#   kas build kas/kas-qbee-x86-64.yml:kas/kas-qbee-docker.yml
+#   kas build kas/kas-qbee-arm64.yml:kas/kas-qbee-docker.yml
+#
+# The Docker/containerd/runc/compose binaries are compressed with UPX in the rootfs
+# (see meta-qbee-demo/classes/qbee-demo-upx.bbclass) to fit the fixed-size root partitions.
+# All Docker and containerd state lives on the data partition under /data/docker.
+
+repos:
+  # branches follow the arch config's defaults
+  meta-openembedded:
+    url: "https://github.com/openembedded/meta-openembedded.git"
+    path: layers/meta-openembedded
+    layers:
+      meta-oe:
+      meta-python:
+      meta-networking:
+      meta-filesystems:
+  meta-virtualization:
+    url: "https://git.yoctoproject.org/meta-virtualization"
+    path: layers/meta-virtualization
+
+local_conf_header:
+  docker: |
+    # Pulls in the meta-virtualization kernel config fragments (cgroups, overlayfs, netfilter, ...)
+    DISTRO_FEATURES:append = " virtualization"
+    CONTAINER_PROFILE = "docker"
+
+    IMAGE_INSTALL:append = " docker-moby docker-compose"
+
+    IMAGE_CLASSES += "qbee-demo-upx"
+    # Symlinks (ctr, docker-runc, docker-containerd, ...) point at these and need no handling
+    UPX_COMPRESS_FILES = " \
+        ${bindir}/dockerd \
+        ${bindir}/docker \
+        ${bindir}/docker-proxy \
+        ${bindir}/containerd \
+        ${bindir}/containerd-shim-runc-v2 \
+        ${bindir}/containerd-ctr \
+        ${bindir}/runc \
+        ${nonarch_libdir}/docker/cli-plugins/docker-compose \
+    "
+
+    # Room for images/containers on the data partition (default is 100M)
+    QBEE_DEMO_DATA_SIZE = "1024M"

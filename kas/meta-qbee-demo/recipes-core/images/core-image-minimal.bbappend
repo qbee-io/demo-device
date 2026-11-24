@@ -1,5 +1,8 @@
 include ${BPN}-${MACHINE}.inc
 
+# Size of the shared /data partition, used by the .wks.in files
+QBEE_DEMO_DATA_SIZE ?= "100M"
+
 inherit extrausers
 
 IMAGE_INSTALL:append = " sudo"

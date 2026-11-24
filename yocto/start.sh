@@ -17,6 +17,8 @@ MAC=$(echo "$HOSTNAME" | md5sum | sed 's/^\(..\)\(..\)\(..\)\(..\)\(..\).*$/02:\
 # Defaults
 QBEE_DEMO_DEVICE_HUB_HOST=${QBEE_DEMO_DEVICE_HUB_HOST:-device.app.qbee.io}
 QBEE_DEMO_DEVICE_NAME_TYPE=${QBEE_DEMO_DEVICE_NAME_TYPE:-hostname}
+# Guest RAM in MiB; the Docker variant needs more than the default
+QEMU_MEMORY=${QEMU_MEMORY:-256}
 
 # Generate the bootstrap-env file for this device
 cat > /run/.bootstrap-env << EOF
@@ -37,7 +39,7 @@ start_x86_64() {
     -device scsi-hd,drive=hd \
     -usb -device usb-tablet -usb -device usb-tablet -usb -device usb-kbd \
     -drive if=pflash,format=qcow2,file="$FLASH_IMG" \
-    -cpu max -machine q35,i8042=off -smp 4 -m 256 -serial mon:stdio -serial null -nographic \
+    -cpu max -machine q35,i8042=off -smp 4 -m "$QEMU_MEMORY" -serial mon:stdio -serial null -nographic \
     "${QEMU_OPTIONS[@]}" 2> /tmp/qemu.log
 }
 
@@ -52,7 +54,7 @@ start_aarch64() {
   	-device virtio-blk-device,drive=disk0 \
   	-drive if=pflash,format=raw,index=1,file="$UBOOT_ENV_IMG" \
   	-machine virt -cpu max \
-  	-smp 4 -m 256 -serial mon:stdio -serial null -nographic \
+  	-smp 4 -m "$QEMU_MEMORY" -serial mon:stdio -serial null -nographic \
   	-bios "$UBOOT_IMG" \
   	"${QEMU_OPTIONS[@]}" 2> /tmp/qemu.log
 }
