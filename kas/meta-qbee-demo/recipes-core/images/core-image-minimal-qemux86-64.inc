@@ -1,1 +1,1 @@
-WKS_FILE = "qemux86-64.wks"
+WKS_FILE = "qemux86-64.wks.in"

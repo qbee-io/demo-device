@@ -1,0 +1,111 @@
+name: CI Yocto Docker
+
+# Builds the x86-64 Yocto demo image with Docker + docker compose (kas/kas-qbee-docker.yml overlay)
+# and uploads the disk image and RAUC bundle as workflow artifacts. Nothing is released.
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 600
+    # Shares the bitbake hash-equivalence DB (stored in SSTATE_DIR) with the CI Yocto workflow,
+    # so don't run two Docker builds at once
+    concurrency:
+      group: yocto-docker-x86-64
+    container:
+      image: ghcr.io/siemens/kas/kas:5.0-debian-bookworm
+      options: --user 1000:1000
+      env:
+        KAS_CLONE_DEPTH: 0
+        # Downloads and sstate are shared with the regular build to avoid rebuilding everything;
+        # TMPDIR is separate so the two configurations don't overwrite each other's deploy dir
+        DL_DIR: /ci/demo-device/downloads
+        SSTATE_DIR: /ci/demo-device/x86-64/sstate
+        TMPDIR: /ci/demo-device/x86-64-docker/tmp
+      volumes:
+        - /home/runner/ci/demo-device:/ci/demo-device
+        - /etc/passwd:/etc/passwd:ro
+        - /etc/group:/etc/group:ro
+
+    env:
+      KAS_CONFIG: kas/kas-qbee-x86-64.yml:kas/kas-qbee-docker.yml
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          clean: true
+          fetch-depth: 0
+
+      - name: Install RAUC signing key
+        env:
+          RAUC_SIGNING_KEY: ${{ secrets.RAUC_SIGNING_KEY }}
+        run: |
+          set -eu
+          key="$RUNNER_TEMP/rauc-signing.key.pem"
+          (umask 077 && printf '%s\n' "$RAUC_SIGNING_KEY" > "$key")
+          echo "RAUC_KEY_FILE=$key" >> "$GITHUB_ENV"
+
+      # Same as the regular build: force qbee-agent (and the image) to be rebuilt
+      - name: Clean target state
+        run: |
+          kas shell -c "bitbake -fc do_cleansstate core-image-minimal qbee-agent" "$KAS_CONFIG"
+          kas shell -c "bitbake -fc clean core-image-minimal qbee-agent" "$KAS_CONFIG"
+
+      - name: Run kas for x86-64 with Docker
+        run: kas build "$KAS_CONFIG"
+
+      # The rootfs must fit the fixed 250M root partitions; show what takes the space
+      # (rm_work removes the rootfs after a successful build, so this mostly helps on failure)
+      - name: Rootfs size breakdown
+        if: always()
+        run: |
+          rootfs="$TMPDIR/work/qemux86_64-oe-linux/core-image-minimal/1.0/rootfs"
+          if [ ! -d "$rootfs" ]; then
+            echo "No rootfs left in $rootfs"
+            exit 0
+          fi
+          du -sk "$rootfs"
+          du -xk --max-depth=4 "$rootfs" | sort -n | tail -40
+          echo "Largest files:"
+          find "$rootfs" -xdev -type f -size +1M -exec du -k {} + | sort -n | tail -30
+
+      - name: Collect build artifacts
+        run: |
+          set -eu
+          deploy="$TMPDIR/deploy/images/qemux86-64"
+          out=artifacts/x86-64
+          rm -rf "$out" && mkdir -p "$out"
+          # -L dereferences the deploy dir symlinks
+          cp -L "$deploy/qemu-demo-bundle-qemux86-64.raucb" "$out/qbee-demo-bundle-docker-qemux86-64.raucb"
+          cp -L "$deploy/core-image-minimal-qemux86-64.rootfs.wic" "$deploy/ovmf.qcow2" "$out/"
+          ls -l "$out"
+
+          # Size report: how full the fixed 250M root partition is after UPX
+          rootfs="$deploy/core-image-minimal-qemux86-64.rootfs.ext4"
+          {
+            echo "### Docker image for x86-64"
+            echo '```'
+            ls -lL "$rootfs"
+            # The kas container has no e2fsprogs; use the one bitbake built
+            "$TMPDIR/sysroots-components/x86_64/e2fsprogs-native/usr/sbin/dumpe2fs" -h "$rootfs" 2>/dev/null \
+              | grep -E '^(Block count|Free blocks|Block size):' || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-artifacts-docker-x86-64
+          path: artifacts/x86-64
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Remove RAUC signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/rauc-signing.key.pem"
