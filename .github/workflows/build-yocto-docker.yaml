@@ -92,7 +92,9 @@ jobs:
             echo "### Docker image for x86-64"
             echo '```'
             ls -lL "$rootfs"
-            /sbin/dumpe2fs -h "$rootfs" 2>/dev/null | grep -E '^(Block count|Free blocks|Block size):' || true
+            # The kas container has no e2fsprogs; use the one bitbake built
+            "$TMPDIR/sysroots-components/x86_64/e2fsprogs-native/usr/sbin/dumpe2fs" -h "$rootfs" 2>/dev/null \
+              | grep -E '^(Block count|Free blocks|Block size):' || true
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 

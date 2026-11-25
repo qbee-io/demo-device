@@ -5,7 +5,7 @@ header:
 #   kas build kas/kas-qbee-x86-64.yml:kas/kas-qbee-docker.yml
 #   kas build kas/kas-qbee-arm64.yml:kas/kas-qbee-docker.yml
 #
-# The Docker/containerd/runc/compose binaries are compressed with UPX in the rootfs
+# The daemons and per-container helpers are compressed with UPX in the rootfs
 # (see meta-qbee-demo/classes/qbee-demo-upx.bbclass) to fit the fixed-size root partitions.
 # All Docker and containerd state lives on the data partition under /data/docker.
 
@@ -36,16 +36,22 @@ local_conf_header:
     # built into the kernel; the modules Docker needs are pulled in by docker-moby's RRECOMMENDS.
     IMAGE_INSTALL:remove = "kernel-modules"
 
+    # The udev hardware database (~20M) only provides vendor/model names for devices,
+    # which the VM doesn't need; dropped to make room for the uncompressed docker CLIs
+    BAD_RECOMMENDATIONS += "udev-hwdb"
+
     IMAGE_CLASSES += "qbee-demo-upx"
-    # Symlinks (docker-runc, docker-containerd, ...) point at these and need no handling
+    # docker and docker-compose are left uncompressed so interactive commands don't pay the
+    # decompression delay. The daemons (dockerd, containerd, qbee-agent) are unpacked once at
+    # boot; runc, the shim and docker-proxy run per container/port and stay compressed only
+    # because the 250M root partition has no room for them uncompressed (+~18M).
     UPX_COMPRESS_FILES = " \
         ${bindir}/dockerd \
-        ${bindir}/docker \
-        ${bindir}/docker-proxy \
         ${bindir}/containerd \
-        ${bindir}/containerd-shim-runc-v2 \
+        ${bindir}/qbee-agent \
         ${bindir}/runc \
-        ${nonarch_libdir}/docker/cli-plugins/docker-compose \
+        ${bindir}/containerd-shim-runc-v2 \
+        ${bindir}/docker-proxy \
     "
 
     # Room for images/containers on the data partition (default is 100M)
